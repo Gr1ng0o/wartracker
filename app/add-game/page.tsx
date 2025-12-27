@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function AddGamePage() {
   const [gameType, setGameType] = useState<"40k" | "FaB">("40k");
@@ -57,7 +58,15 @@ export default function AddGamePage() {
   return (
     <main className="mx-auto max-w-2xl p-6">
       <div className="rounded-3xl border border-white/10 bg-black/60 p-6 text-white shadow-2xl backdrop-blur-md">
-        <h1 className="text-3xl font-bold">Ajouter une partie</h1>
+        {/* Bouton retour accueil */}
+        <Link
+          href="/"
+          className="inline-block rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold text-black transition hover:bg-white"
+        >
+          ← Retour à l’accueil
+        </Link>
+
+        <h1 className="mt-4 text-3xl font-bold">Ajouter une partie</h1>
         <p className="mt-1 text-sm text-gray-300">
           Warhammer 40k / Flesh and Blood
         </p>
