@@ -2,27 +2,20 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+type Ctx =
+  | { params: { id: string } }
+  | { params: Promise<{ id: string }> };
+
+export async function PATCH(req: Request, ctx: Ctx) {
+  const { id } = await (ctx as any).params; // support params Promise ou object
   const body = await req.json();
 
   const updated = await prisma.game.update({
-    where: { id: params.id },
+    where: { id },
     data: {
-      notes: body.notes ?? null,
-      build: body.build ?? undefined,
-      opponent: body.opponent ?? undefined,
-      playerFaction: body.playerFaction ?? undefined,
-      playerDetachment: body.playerDetachment ?? undefined,
-      opponentFaction: body.opponentFaction ?? undefined,
-      opponentDetachment: body.opponentDetachment ?? undefined,
-      scoreFor: body.scoreFor === "" ? null : body.scoreFor ?? undefined,
-      scoreAgainst: body.scoreAgainst === "" ? null : body.scoreAgainst ?? undefined,
-      result: body.result ?? undefined,
+      notes: typeof body.notes === "string" ? body.notes : undefined,
+      // Tu peux autoriser d'autres champs plus tard si tu veux
     },
-    include: { attachments: true },
   });
 
   return Response.json(updated);
