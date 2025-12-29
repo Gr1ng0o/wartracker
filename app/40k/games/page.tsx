@@ -7,7 +7,9 @@ import GamesClient from "./games-client";
 const prisma = new PrismaClient();
 
 export default async function GamesPage() {
-  const games = await prisma.game.findMany({ orderBy: { createdAt: "desc" } });
+  const games = await prisma.game.findMany({
+    orderBy: { createdAt: "desc" },
+  });
 
   const safeGames = games.map((g) => ({
     ...g,

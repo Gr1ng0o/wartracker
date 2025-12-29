@@ -54,7 +54,7 @@ export default function GamesClient({ initialGames }: { initialGames: Game[] }) 
           <div className="mt-6 space-y-3">
             {filtered.map((g) => (
               <div
-                key={g.id}
+                key={g.id} // id = string ✅
                 className="rounded-2xl border border-white/10 bg-black/40 p-4"
               >
                 <div className="flex flex-wrap items-center gap-2">
@@ -77,7 +77,7 @@ export default function GamesClient({ initialGames }: { initialGames: Game[] }) 
                 </div>
 
                 {g.notes?.trim() && (
-                  <div className="mt-2 text-sm text-gray-200 whitespace-pre-wrap">
+                  <div className="mt-2 whitespace-pre-wrap text-sm text-gray-200">
                     {g.notes}
                   </div>
                 )}
