@@ -2,9 +2,23 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import type { Prisma } from "@prisma/client";
 
-type Game = Omit<Prisma.GameGetPayload<{}>, "createdAt"> & { createdAt: string };
+// ✅ on ne dépend PLUS d'un type Prisma/Game qui peut être faux
+type Game = {
+  id: string;
+  createdAt: string;
+  gameType: string;
+  build: string;
+  opponent: string;
+  result: "W" | "L" | string;
+  notes?: string | null;
+};
+
+function labelGameType(gameType: string) {
+  if (gameType === "40k") return "Warhammer 40k";
+  if (gameType === "FaB") return "Flesh and Blood";
+  return gameType;
+}
 
 export default function GamesClient({ initialGames }: { initialGames: Game[] }) {
   const [games] = useState<Game[]>(initialGames);
@@ -54,13 +68,18 @@ export default function GamesClient({ initialGames }: { initialGames: Game[] }) 
           <div className="mt-6 space-y-3">
             {filtered.map((g) => (
               <div
-                key={g.id} // id = string ✅
+                key={g.id}
                 className="rounded-2xl border border-white/10 bg-black/40 p-4"
               >
                 <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-gray-200">
+                    {labelGameType(g.gameType)}
+                  </span>
+
                   <div className="text-lg font-semibold">
-                    {g.gameType.toUpperCase()} • {g.build} vs {g.opponent}
+                    {g.build} vs {g.opponent}
                   </div>
+
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
                       g.result === "W"
