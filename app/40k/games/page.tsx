@@ -2,16 +2,17 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { PrismaClient } from "@prisma/client";
-import Games40kClient from "./games-client";
+import GamesClient from "./games-client";
 
 const prisma = new PrismaClient();
 
-export default async function Games40kPage() {
-  const games = await prisma.game.findMany({
-  where: { gameType: "40k" },
-  orderBy: { createdAt: "desc" },
-});
+export default async function GamesPage() {
+  const games = await prisma.game.findMany({ orderBy: { createdAt: "desc" } });
 
+  const safeGames = games.map((g) => ({
+    ...g,
+    createdAt: g.createdAt.toISOString(), // Date -> string
+  }));
 
-  return <Games40kClient initialGames={games} />;
+  return <GamesClient initialGames={safeGames} />;
 }
