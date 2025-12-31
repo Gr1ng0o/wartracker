@@ -10,12 +10,17 @@ export async function PATCH(
   const { id } = await context.params;
 
   const body = await req.json().catch(() => ({}));
-  const notes = typeof body?.notes === "string" ? body.notes : "";
+
+  const data: { notes?: string; armyListPdfUrl?: string | null } = {};
+
+  if (typeof body?.notes === "string") data.notes = body.notes;
+  if (typeof body?.armyListPdfUrl === "string") data.armyListPdfUrl = body.armyListPdfUrl;
+  if (body?.armyListPdfUrl === null) data.armyListPdfUrl = null;
 
   const updated = await prisma.game.update({
     where: { id },
-    data: { notes },
-    select: { id: true, notes: true },
+    data,
+    select: { id: true, notes: true, armyListPdfUrl: true },
   });
 
   return Response.json(updated);

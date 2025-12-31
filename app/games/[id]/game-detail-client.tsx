@@ -17,6 +17,11 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
+  // PDF upload state
+  const [pdfUrl, setPdfUrl] = useState<string>(game.armyListPdfUrl ?? "");
+  const [uploading, setUploading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState<string | null>(null);
+
   const dateStr = new Date(game.createdAt).toLocaleString("fr-FR", {
     year: "numeric",
     month: "2-digit",
@@ -34,7 +39,7 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
     ? "bg-red-500/20 text-red-200 ring-1 ring-red-500/30"
     : "bg-white/10 text-gray-200 ring-1 ring-white/20";
 
-  async function save() {
+  async function saveNotes() {
     setSaving(true);
     setMsg(null);
     try {
@@ -54,6 +59,48 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
       setMsg(`❌ ${e?.message ?? "Erreur"}`);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function uploadPdf(file: File) {
+    setUploading(true);
+    setUploadMsg(null);
+
+    try {
+      if (file.type !== "application/pdf") {
+        throw new Error("Merci de sélectionner un fichier PDF.");
+      }
+
+      // 1) Upload vers Vercel Blob via /api/upload
+      const fd = new FormData();
+      fd.append("file", file);
+
+      const up = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!up.ok) {
+        const t = await up.text().catch(() => "");
+        throw new Error(t || `Upload failed (${up.status})`);
+      }
+
+      const { url } = (await up.json()) as { url: string };
+      setPdfUrl(url);
+
+      // 2) Sauvegarde URL en DB via PATCH /api/games/[id]
+      const res = await fetch(`/api/games/${game.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ armyListPdfUrl: url }),
+      });
+
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        throw new Error(t || `DB update failed (${res.status})`);
+      }
+
+      setUploadMsg("✅ PDF uploadé et lié à la partie.");
+    } catch (e: any) {
+      setUploadMsg(`❌ ${e?.message ?? "Erreur upload"}`);
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -80,14 +127,17 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
         <Field label="Tag 2" value={game.tag2 ?? "—"} />
       </div>
 
-      {/* 40k (affiché même si vide, tu vois ce qui manque) */}
+      {/* 40k */}
       <div className="grid gap-2">
         <Field label="Ma faction" value={game.myFaction ?? "—"} />
         <Field label="Mon détachement" value={game.myDetachment ?? "—"} />
         <Field label="Faction adverse" value={game.oppFaction ?? "—"} />
         <Field label="Détachement adverse" value={game.oppDetachment ?? "—"} />
         <Field label="Mon score (40k)" value={game.myScore === null ? "—" : String(game.myScore)} />
-        <Field label="Score adverse (40k)" value={game.oppScore === null ? "—" : String(game.oppScore)} />
+        <Field
+          label="Score adverse (40k)"
+          value={game.oppScore === null ? "—" : String(game.oppScore)}
+        />
       </div>
 
       {/* Commentaire */}
@@ -102,7 +152,7 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
         />
         <div className="flex items-center gap-2">
           <button
-            onClick={save}
+            onClick={saveNotes}
             disabled={saving}
             className="rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/20 disabled:opacity-50"
           >
@@ -112,21 +162,39 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
         </div>
       </div>
 
-      {/* PDF */}
-      {game.armyListPdfUrl ? (
-        <a
-          href={game.armyListPdfUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-block text-sm underline"
-        >
-          📄 Liste d’armée (PDF)
-        </a>
-      ) : (
-        <div className="text-xs text-gray-400">📄 Pas de PDF renseigné.</div>
-      )}
+      {/* PDF + Upload */}
+      <div className="rounded-xl bg-white/5 p-4 space-y-3">
+        <div className="text-sm font-semibold text-gray-200">Liste d’armée (PDF)</div>
 
-      {/* Photos */}
+        <input
+          type="file"
+          accept="application/pdf"
+          disabled={uploading}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) uploadPdf(f);
+          }}
+          className="block w-full text-sm text-gray-200"
+        />
+
+        {uploading && <div className="text-xs text-gray-300">Upload en cours...</div>}
+        {uploadMsg && <div className="text-xs text-gray-300">{uploadMsg}</div>}
+
+        {pdfUrl ? (
+          <a
+            href={pdfUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block text-sm underline"
+          >
+            📄 Ouvrir le PDF
+          </a>
+        ) : (
+          <div className="text-xs text-gray-400">📄 Pas de PDF renseigné.</div>
+        )}
+      </div>
+
+      {/* Photos (URLs uniquement pour l’instant) */}
       {game.photoUrls && game.photoUrls.length > 0 ? (
         <div className="space-y-2">
           <div className="text-sm font-semibold text-gray-200">Photos</div>

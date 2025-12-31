@@ -1,22 +1,27 @@
+import { NextRequest } from "next/server";
 import { put } from "@vercel/blob";
-import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
+export const runtime = "nodejs"; // important
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const form = await req.formData();
   const file = form.get("file") as File | null;
 
   if (!file) {
-    return NextResponse.json({ error: "No file" }, { status: 400 });
+    return new Response("Missing file", { status: 400 });
   }
 
-  const filename = `${Date.now()}-${file.name}`;
+  // sécurité: PDF only
+  if (file.type !== "application/pdf") {
+    return new Response("Only PDF allowed", { status: 400 });
+  }
 
-  const blob = await put(filename, file, {
+  const filename = file.name || `army-list-${Date.now()}.pdf`;
+
+  const blob = await put(`army-lists/${filename}`, file, {
     access: "public",
-    contentType: file.type || undefined,
+    addRandomSuffix: true,
   });
 
-  return NextResponse.json({ url: blob.url, name: file.name, type: file.type });
+  return Response.json({ url: blob.url });
 }
