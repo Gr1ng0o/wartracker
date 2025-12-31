@@ -4,7 +4,7 @@ export const revalidate = 0;
 import { PrismaClient } from "@prisma/client";
 import GamesClient from "./games-client";
 import Link from "next/link";
-import type { GameDTO } from "./types";
+import type { GameDTO } from "../types";
 
 const prisma = new PrismaClient();
 
