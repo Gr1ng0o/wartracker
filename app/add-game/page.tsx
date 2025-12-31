@@ -54,6 +54,11 @@ export default function AddGamePage() {
     }
   }
 
+  function clearPdf() {
+    setArmyListPdfUrl(null);
+    setPdfMsg(null);
+  }
+
   function resetForm() {
     setBuild("");
     setOpponent("");
@@ -63,12 +68,15 @@ export default function AddGamePage() {
     setTag1("");
     setTag2("");
     setNotes("");
-    setArmyListPdfUrl(null);
-    setPdfMsg(null);
+    clearPdf();
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // évite le submit pendant upload
+    if (uploadingPdf) return;
+
     setSaving(true);
 
     const res = await fetch("/api/games", {
@@ -84,7 +92,7 @@ export default function AddGamePage() {
         tag1,
         tag2,
         notes,
-        armyListPdfUrl, // ✅ URL (ou null)
+        armyListPdfUrl: gameType === "40k" ? armyListPdfUrl : null,
       }),
     });
 
@@ -123,7 +131,13 @@ export default function AddGamePage() {
               <select
                 className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2"
                 value={gameType}
-                onChange={(e) => setGameType(e.target.value as "40k" | "FaB")}
+                onChange={(e) => {
+                  const t = e.target.value as "40k" | "FaB";
+                  setGameType(t);
+
+                  // si on passe sur FaB, on vire le PDF (optionnel mais clean)
+                  if (t !== "40k") clearPdf();
+                }}
               >
                 <option value="40k">Warhammer 40k</option>
                 <option value="FaB">Flesh and Blood</option>
@@ -222,47 +236,61 @@ export default function AddGamePage() {
               />
             </label>
 
-            {/* PDF upload */}
-            <label className="space-y-1 sm:col-span-2">
-              <span className="text-sm font-medium">Liste d’armée (PDF)</span>
-              <input
-                type="file"
-                accept="application/pdf"
-                disabled={uploadingPdf}
-                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) uploadPdf(f);
-                }}
-              />
+            {/* PDF upload (40k only) */}
+            {gameType === "40k" && (
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-sm font-medium">Liste d’armée (PDF)</span>
 
-              {uploadingPdf && (
-                <p className="text-xs text-gray-300">Upload en cours...</p>
-              )}
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  disabled={uploadingPdf}
+                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) uploadPdf(f);
+                  }}
+                />
 
-              {pdfMsg && (
-                <p className="text-xs text-gray-300">{pdfMsg}</p>
-              )}
+                {uploadingPdf && (
+                  <p className="text-xs text-gray-300">Upload en cours...</p>
+                )}
 
-              {armyListPdfUrl && (
-                <a
-                  href={armyListPdfUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs underline text-gray-200"
-                >
-                  Voir le PDF uploadé
-                </a>
-              )}
-            </label>
+                {pdfMsg && <p className="text-xs text-gray-300">{pdfMsg}</p>}
+
+                {armyListPdfUrl && (
+                  <div className="flex items-center gap-3">
+                    <a
+                      href={armyListPdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs underline text-gray-200"
+                    >
+                      Voir le PDF uploadé
+                    </a>
+                    <button
+                      type="button"
+                      onClick={clearPdf}
+                      className="text-xs rounded-lg bg-white/10 px-2 py-1 hover:bg-white/20"
+                    >
+                      Retirer
+                    </button>
+                  </div>
+                )}
+              </label>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || uploadingPdf}
             className="mt-4 w-full rounded-xl bg-white/90 px-4 py-2 font-semibold text-black transition hover:bg-white disabled:opacity-50"
           >
-            {saving ? "Enregistrement..." : "Enregistrer la partie"}
+            {uploadingPdf
+              ? "Upload PDF..."
+              : saving
+              ? "Enregistrement..."
+              : "Enregistrer la partie"}
           </button>
         </form>
       </div>
