@@ -8,13 +8,30 @@ import GameDetailClient from "./game-detail-client";
 
 const prisma = new PrismaClient();
 
-export default async function GameDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+type Ctx =
+  | { params: { id: string } }
+  | { params: Promise<{ id: string }> };
+
+export default async function GameDetailPage(ctx: Ctx) {
+  const params = "then" in (ctx as any).params
+    ? await (ctx as { params: Promise<{ id: string }> }).params
+    : (ctx as { params: { id: string } }).params;
+
+  const id = params?.id;
+
+  if (!id) {
+    return (
+      <main className="mx-auto max-w-3xl p-6 space-y-4">
+        <Link href="/games" className="underline">
+          ← Retour aux parties
+        </Link>
+        <p>Id manquant dans l’URL.</p>
+      </main>
+    );
+  }
+
   const game = await prisma.game.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
 
   if (!game) {
