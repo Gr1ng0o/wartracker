@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { GameDTO } from "./page";
+import type { GameDTO } from "../types";
 
 export default function GamesClient({
   initialGames,
@@ -32,16 +32,16 @@ export default function GamesClient({
 
   return (
     <main className="mx-auto max-w-4xl p-6">
-      <div className="rounded-2xl bg-black/60 backdrop-blur-md p-6 text-white shadow-xl space-y-4">
+      <div className="rounded-2xl bg-black/60 backdrop-blur-md p-6 text-white shadow-xl">
         <div>
           <h1 className="text-3xl font-bold">Parties</h1>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-500">
             Winrate :{" "}
             <span className="font-semibold">{winrate}%</span> ({wins}/{total})
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           <select
             className="rounded-lg border px-3 py-2 text-black"
             value={type}
@@ -54,7 +54,7 @@ export default function GamesClient({
 
           <input
             className="w-56 rounded-lg border px-3 py-2 text-black"
-            placeholder="Rechercher (opponent / build)…"
+            placeholder="Rechercher (opponent/build)…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
@@ -71,73 +71,13 @@ export default function GamesClient({
               <div className="font-semibold">
                 {g.gameType} — {g.build} vs {g.opponent}
               </div>
-
-              <div className="flex items-center gap-2">
-                <span
-                  className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                    g.result === "W"
-                      ? "bg-green-500/20 text-green-300"
-                      : "bg-red-500/20 text-red-300"
-                  }`}
-                >
-                  {g.result}
-                </span>
-
-                {g.score !== null && (
-                  <span className="rounded-full bg-gray-500/20 px-2 py-1 text-xs font-semibold">
-                    score : {g.score}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-2 flex flex-wrap gap-2 text-sm text-gray-400">
-              <span>{g.first ? "Je commence" : "Je ne commence pas"}</span>
-
-              {g.tag1 && (
-                <span className="rounded-full bg-gray-500/20 px-2 py-1 text-xs">
-                  {g.tag1}
-                </span>
-              )}
-              {g.tag2 && (
-                <span className="rounded-full bg-gray-500/20 px-2 py-1 text-xs">
-                  {g.tag2}
-                </span>
-              )}
             </div>
 
             {g.notes && <p className="mt-2 text-sm">{g.notes}</p>}
 
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs text-gray-400">
               {new Date(g.createdAt).toLocaleString()}
             </p>
-
-            {g.armyListPdfUrl && (
-              <a
-                href={g.armyListPdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-block text-xs text-blue-400 hover:underline"
-              >
-                📄 Liste d’armée
-              </a>
-            )}
-
-            {g.photoUrls && g.photoUrls.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {g.photoUrls.map((url, i) => (
-                  <a
-                    key={i}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-blue-400 hover:underline"
-                  >
-                    📷 Photo {i + 1}
-                  </a>
-                ))}
-              </div>
-            )}
           </li>
         ))}
       </ul>
