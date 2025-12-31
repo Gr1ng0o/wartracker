@@ -1,41 +1,34 @@
 import { PrismaClient } from "@prisma/client";
-import type { NextRequest } from "next/server";
+
+export const runtime = "nodejs"; // ✅ Prisma doit tourner en nodejs
 
 const prisma = new PrismaClient();
 
-/**
- * DELETE /api/games/[id]
- */
-export async function DELETE(
-  _req: NextRequest,
-  context: { params: Promise<any> }
-) {
+async function getId(ctx: any): Promise<string | null> {
+  const p = ctx?.params && typeof ctx.params.then === "function" ? await ctx.params : ctx?.params;
+  const id = p?.id;
+  return typeof id === "string" && id.length > 0 ? id : null;
+}
+
+export async function PATCH(req: Request, ctx: any) {
   try {
-    const params = await context.params;
-    const id = params?.id;
+    const id = await getId(ctx);
+    if (!id) return Response.json({ error: "Missing id" }, { status: 400 });
 
-    console.log("DELETE game id =", id);
+    const body = await req.json().catch(() => ({}));
+    const notes = typeof body?.notes === "string" ? body.notes : null;
 
-    if (!id || typeof id !== "string") {
-      return Response.json(
-        { error: "Invalid or missing id" },
-        { status: 400 }
-      );
-    }
-
-    await prisma.game.delete({
+    const updated = await prisma.game.update({
       where: { id },
+      data: { notes },
+      select: { id: true, notes: true },
     });
 
-    return Response.json({ success: true }, { status: 200 });
+    return Response.json(updated);
   } catch (e: any) {
-    console.error("DELETE /api/games/[id] ERROR =", e);
-
+    console.error("PATCH /api/games/[id] ERROR =", e);
     return Response.json(
-      {
-        error: "Erreur lors de la suppression",
-        details: e?.message ?? String(e),
-      },
+      { error: "Erreur serveur lors de la mise à jour", details: String(e?.message ?? e) },
       { status: 500 }
     );
   }

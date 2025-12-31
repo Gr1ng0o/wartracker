@@ -27,9 +27,10 @@ export default function EditNotes({
 
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
-        alert("Erreur lors de la mise à jour\n" + txt);
+        alert(`Erreur lors de la mise à jour (${res.status})\n${txt}`);
         return;
-      }
+}
+
 
       setEditing(false);
       router.refresh(); // re-fetch server data
