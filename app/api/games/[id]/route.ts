@@ -1,27 +1,42 @@
-import { NextRequest } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import type { NextRequest } from "next/server";
 
 const prisma = new PrismaClient();
 
-export async function PATCH(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> }
+/**
+ * DELETE /api/games/[id]
+ */
+export async function DELETE(
+  _req: NextRequest,
+  context: { params: Promise<any> }
 ) {
-  const { id } = await context.params;
+  try {
+    const params = await context.params;
+    const id = params?.id;
 
-  const body = await req.json().catch(() => ({}));
+    console.log("DELETE game id =", id);
 
-  const data: { notes?: string; armyListPdfUrl?: string | null } = {};
+    if (!id || typeof id !== "string") {
+      return Response.json(
+        { error: "Invalid or missing id" },
+        { status: 400 }
+      );
+    }
 
-  if (typeof body?.notes === "string") data.notes = body.notes;
-  if (typeof body?.armyListPdfUrl === "string") data.armyListPdfUrl = body.armyListPdfUrl;
-  if (body?.armyListPdfUrl === null) data.armyListPdfUrl = null;
+    await prisma.game.delete({
+      where: { id },
+    });
 
-  const updated = await prisma.game.update({
-    where: { id },
-    data,
-    select: { id: true, notes: true, armyListPdfUrl: true },
-  });
+    return Response.json({ success: true }, { status: 200 });
+  } catch (e: any) {
+    console.error("DELETE /api/games/[id] ERROR =", e);
 
-  return Response.json(updated);
+    return Response.json(
+      {
+        error: "Erreur lors de la suppression",
+        details: e?.message ?? String(e),
+      },
+      { status: 500 }
+    );
+  }
 }
