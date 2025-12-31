@@ -5,7 +5,11 @@ import type { GameDTO } from "../../types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export default function GamesClient40k({ initialGames }: { initialGames: GameDTO[] }) {
+export default function GamesClient40k({
+  initialGames,
+}: {
+  initialGames: GameDTO[];
+}) {
   const router = useRouter();
   const [q, setQ] = useState("");
 
@@ -94,6 +98,13 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
               ? `${g.myScore} - ${g.oppScore}`
               : null;
 
+          const resultClasses =
+            g.result === "W"
+              ? "bg-green-600/25 text-green-200 ring-1 ring-green-400/30"
+              : g.result === "L"
+              ? "bg-red-600/25 text-red-200 ring-1 ring-red-400/30"
+              : "bg-white/10 text-gray-200 ring-1 ring-white/20";
+
           return (
             <li key={g.id} className="rounded-xl shadow-lg">
               <div className="relative rounded-xl bg-black/50 backdrop-blur-sm p-4 text-white">
@@ -113,8 +124,17 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
                       </div>
                     </div>
 
-                    <span className="rounded-full px-3 py-1 text-xs font-semibold bg-white/10 text-gray-200 ring-1 ring-white/20">
-                      {g.result === "W" ? "Victoire" : g.result === "L" ? "Défaite" : g.result ?? "—"}
+                    <span
+                      className={[
+                        "rounded-full px-3 py-1 text-xs font-semibold",
+                        resultClasses,
+                      ].join(" ")}
+                    >
+                      {g.result === "W"
+                        ? "Victoire"
+                        : g.result === "L"
+                        ? "Défaite"
+                        : g.result ?? "—"}
                     </span>
                   </div>
                 </Link>
