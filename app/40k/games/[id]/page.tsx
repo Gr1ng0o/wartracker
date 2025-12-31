@@ -1,16 +1,16 @@
-import { PrismaClient } from "@prisma/client";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import EditNotes from "./edit-notes";
+import { prisma } from "@/lib/prisma";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-const prisma = new PrismaClient();
 
 async function getId(params: any): Promise<string | null> {
   const resolved =
     params && typeof params.then === "function" ? await params : params;
+
   const id = resolved?.id;
   return typeof id === "string" && id.length > 0 ? id : null;
 }
@@ -27,11 +27,12 @@ function fmtDate(d: Date) {
 
 export default async function Page({ params }: { params: any }) {
   const id = await getId(params);
-  if (!id) return notFound();
+  if (!id) notFound();
 
   const g = await prisma.game.findUnique({ where: { id } });
-  if (!g) return notFound();
+  if (!g) notFound();
 
+  // Sécurité : photoUrls peut être null/undefined en DB
   const photos = Array.isArray(g.photoUrls) ? g.photoUrls : [];
 
   return (
@@ -59,7 +60,8 @@ export default async function Page({ params }: { params: any }) {
             <div className="text-xs font-semibold text-gray-200">Factions</div>
             <div className="mt-2 text-sm text-gray-200">
               <div>
-                Toi : <span className="font-semibold">{g.myFaction ?? "—"}</span>
+                Toi :{" "}
+                <span className="font-semibold">{g.myFaction ?? "—"}</span>
                 {g.myDetachment ? ` (${g.myDetachment})` : ""}
               </div>
               <div className="mt-1">
@@ -118,9 +120,10 @@ export default async function Page({ params }: { params: any }) {
 
         <div className="rounded-xl border border-white/10 bg-black/30 p-4">
           <div className="text-xs font-semibold text-gray-200">Photos</div>
+
           {photos.length ? (
             <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {photos.map((url, i) => (
+              {photos.map((url: string, i: number) => (
                 <a
                   key={`${url}-${i}`}
                   href={url}
@@ -141,7 +144,7 @@ export default async function Page({ params }: { params: any }) {
         </div>
 
         {/* ✅ NOTES EDITABLES via composant client */}
-        <EditNotes id={g.id} initialNotes={g.notes} />
+        <EditNotes id={g.id} initialNotes={g.notes ?? ""} />
       </div>
     </main>
   );
