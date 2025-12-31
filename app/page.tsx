@@ -103,12 +103,6 @@ export default function Home() {
             />
           </div>
 
-          {/* Subtitle */}
-          <p className="mt-5 text-center text-sm text-white/60">
-            Un tracker grimdark pour tes parties : stats, notes, listes d’armées,
-            photos et fiche de scores.
-          </p>
-
           {/* CTA blocks */}
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
             <GrimLink
@@ -126,10 +120,6 @@ export default function Home() {
           </div>
 
           {/* bottom ornament */}
-          <div className="mt-8 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          <div className="mt-4 text-center text-xs text-white/35">
-            Built for the long war.
-          </div>
         </div>
       </div>
     </main>
