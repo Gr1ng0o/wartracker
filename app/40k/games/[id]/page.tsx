@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import EditNotes from "./edit-notes";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -120,7 +121,12 @@ export default async function Page({ params }: { params: any }) {
           {photos.length ? (
             <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
               {photos.map((url, i) => (
-                <a key={`${url}-${i}`} href={url} target="_blank" rel="noreferrer">
+                <a
+                  key={`${url}-${i}`}
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   <img
                     src={url}
                     alt={`Photo ${i + 1}`}
@@ -134,12 +140,8 @@ export default async function Page({ params }: { params: any }) {
           )}
         </div>
 
-        <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-          <div className="text-xs font-semibold text-gray-200">Notes</div>
-          <div className="mt-2 whitespace-pre-wrap text-sm text-gray-200">
-            {g.notes?.trim() ? g.notes : "—"}
-          </div>
-        </div>
+        {/* ✅ NOTES EDITABLES via composant client */}
+        <EditNotes id={g.id} initialNotes={g.notes} />
       </div>
     </main>
   );
