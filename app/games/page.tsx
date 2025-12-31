@@ -4,6 +4,7 @@ export const revalidate = 0;
 import { PrismaClient } from "@prisma/client";
 import GamesClient from "./games-client";
 import Link from "next/link";
+import type { GameDTO } from "./types";
 
 const prisma = new PrismaClient();
 
@@ -12,8 +13,29 @@ export default async function GamesPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  // ✅ Date -> string (et évite les problèmes TS côté client)
-  const safeGames = JSON.parse(JSON.stringify(games));
+  const safeGames: GameDTO[] = games.map((g) => ({
+    id: g.id,
+    createdAt: g.createdAt.toISOString(),
+    gameType: g.gameType,
+    build: g.build,
+    opponent: g.opponent,
+    first: g.first,
+    result: g.result,
+    score: g.score,
+    tag1: g.tag1,
+    tag2: g.tag2,
+    notes: g.notes,
+
+    myFaction: g.myFaction,
+    myDetachment: g.myDetachment,
+    oppFaction: g.oppFaction,
+    oppDetachment: g.oppDetachment,
+    myScore: g.myScore,
+    oppScore: g.oppScore,
+
+    armyListPdfUrl: g.armyListPdfUrl,
+    photoUrls: g.photoUrls,
+  }));
 
   return (
     <main className="mx-auto max-w-4xl p-6 space-y-4">
