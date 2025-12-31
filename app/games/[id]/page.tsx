@@ -32,6 +32,29 @@ export default async function GameDetailPage(ctx: Ctx) {
 
   const game = await prisma.game.findUnique({
     where: { id },
+    select: {
+      id: true,
+      createdAt: true,
+      gameType: true,
+      build: true,
+      opponent: true,
+      first: true,
+      result: true,
+      score: true,
+      tag1: true,
+      tag2: true,
+      notes: true,
+
+      myFaction: true,
+      myDetachment: true,
+      oppFaction: true,
+      oppDetachment: true,
+      myScore: true,
+      oppScore: true,
+
+      armyListPdfUrl: true,
+      photoUrls: true,
+    },
   });
 
   if (!game) {
@@ -45,9 +68,29 @@ export default async function GameDetailPage(ctx: Ctx) {
     );
   }
 
+  // ✅ mapping explicite (pas de spread)
   const safeGame: GameDTO = {
-    ...game,
+    id: game.id,
     createdAt: game.createdAt.toISOString(),
+    gameType: game.gameType,
+    build: game.build,
+    opponent: game.opponent,
+    first: game.first,
+    result: game.result,
+    score: game.score,
+    tag1: game.tag1,
+    tag2: game.tag2,
+    notes: game.notes,
+
+    myFaction: game.myFaction,
+    myDetachment: game.myDetachment,
+    oppFaction: game.oppFaction,
+    oppDetachment: game.oppDetachment,
+    myScore: game.myScore,
+    oppScore: game.oppScore,
+
+    armyListPdfUrl: game.armyListPdfUrl,
+    photoUrls: game.photoUrls ?? [],
   };
 
   return (
