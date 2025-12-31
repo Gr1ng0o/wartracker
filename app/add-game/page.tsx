@@ -13,7 +13,59 @@ export default function AddGamePage() {
   const [tag1, setTag1] = useState("");
   const [tag2, setTag2] = useState("");
   const [notes, setNotes] = useState("");
+
+  // PDF (URL en DB)
+  const [armyListPdfUrl, setArmyListPdfUrl] = useState<string | null>(null);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [pdfMsg, setPdfMsg] = useState<string | null>(null);
+
   const [saving, setSaving] = useState(false);
+
+  async function uploadPdf(file: File) {
+    setUploadingPdf(true);
+    setPdfMsg(null);
+
+    try {
+      if (file.type !== "application/pdf") {
+        throw new Error("Merci de sélectionner un fichier PDF.");
+      }
+
+      const fd = new FormData();
+      fd.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: fd,
+      });
+
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        throw new Error(t || `Upload failed (${res.status})`);
+      }
+
+      const data = (await res.json()) as { url: string };
+      setArmyListPdfUrl(data.url);
+      setPdfMsg("✅ PDF uploadé.");
+    } catch (e: any) {
+      setArmyListPdfUrl(null);
+      setPdfMsg(`❌ ${e?.message ?? "Erreur upload PDF"}`);
+    } finally {
+      setUploadingPdf(false);
+    }
+  }
+
+  function resetForm() {
+    setBuild("");
+    setOpponent("");
+    setFirst(true);
+    setResult("W");
+    setScore("");
+    setTag1("");
+    setTag2("");
+    setNotes("");
+    setArmyListPdfUrl(null);
+    setPdfMsg(null);
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,33 +84,25 @@ export default function AddGamePage() {
         tag1,
         tag2,
         notes,
+        armyListPdfUrl, // ✅ URL (ou null)
       }),
     });
 
     setSaving(false);
 
     if (!res.ok) {
-      alert("Erreur lors de l'enregistrement");
+      const t = await res.text().catch(() => "");
+      alert(t || "Erreur lors de l'enregistrement");
       return;
     }
 
-    // Reset form
-    setBuild("");
-    setOpponent("");
-    setFirst(true);
-    setResult("W");
-    setScore("");
-    setTag1("");
-    setTag2("");
-    setNotes("");
-
+    resetForm();
     alert("Partie enregistrée ✅");
   }
 
   return (
     <main className="mx-auto max-w-2xl p-6">
       <div className="rounded-3xl border border-white/10 bg-black/60 p-6 text-white shadow-2xl backdrop-blur-md">
-        {/* Bouton retour accueil */}
         <Link
           href="/"
           className="inline-block rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold text-black transition hover:bg-white"
@@ -79,9 +123,7 @@ export default function AddGamePage() {
               <select
                 className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2"
                 value={gameType}
-                onChange={(e) =>
-                  setGameType(e.target.value as "40k" | "FaB")
-                }
+                onChange={(e) => setGameType(e.target.value as "40k" | "FaB")}
               >
                 <option value="40k">Warhammer 40k</option>
                 <option value="FaB">Flesh and Blood</option>
@@ -178,6 +220,40 @@ export default function AddGamePage() {
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Moment clé, erreur, ajustement…"
               />
+            </label>
+
+            {/* PDF upload */}
+            <label className="space-y-1 sm:col-span-2">
+              <span className="text-sm font-medium">Liste d’armée (PDF)</span>
+              <input
+                type="file"
+                accept="application/pdf"
+                disabled={uploadingPdf}
+                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadPdf(f);
+                }}
+              />
+
+              {uploadingPdf && (
+                <p className="text-xs text-gray-300">Upload en cours...</p>
+              )}
+
+              {pdfMsg && (
+                <p className="text-xs text-gray-300">{pdfMsg}</p>
+              )}
+
+              {armyListPdfUrl && (
+                <a
+                  href={armyListPdfUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs underline text-gray-200"
+                >
+                  Voir le PDF uploadé
+                </a>
+              )}
             </label>
           </div>
 
