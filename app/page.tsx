@@ -1,14 +1,26 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
     <main className="min-h-screen">
       <div className="mx-auto max-w-3xl p-6 pt-14">
         <div className="rounded-3xl border border-white/10 bg-black/60 p-8 text-white shadow-2xl backdrop-blur-md">
-          <h1 className="text-4xl font-extrabold tracking-tight">WarTracker</h1>
+          
+          {/* LOGO */}
+          <div className="flex justify-center">
+            <Image
+              src="/branding/wartracker-logo.png"
+              alt="WarTracker"
+              width={1000}
+              height={500}
+              priority
+              className="w-full max-w-[520px] select-none drop-shadow-[0_0_20px_rgba(234,179,8,0.35)]"
+            />
+          </div>
 
           {/* Actions */}
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="mt-10 grid gap-4 sm:grid-cols-2">
             <Link
               href="/40k"
               className="rounded-2xl border border-white/10 bg-white/10 p-5 transition hover:bg-white/15"

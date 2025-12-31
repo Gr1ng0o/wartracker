@@ -24,4 +24,7 @@ export type GameDTO = {
 
   armyListPdfUrl?: string | null;
   photoUrls?: string[];
+
+  armyListPdfUrl2?: string | null;
+  scoreSheetUrl?: string | null;
 };

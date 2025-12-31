@@ -8,6 +8,12 @@ function parseNullableNumber(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function parseNullableString(v: unknown): string | null {
+  if (v === null || v === undefined) return null;
+  const s = String(v).trim();
+  return s.length ? s : null;
+}
+
 /**
  * POST /api/games
  * → création d'une partie
@@ -46,6 +52,11 @@ export async function POST(req: Request) {
         )
       : [];
 
+    // ✅ nouveaux champs (en string nullable)
+    const armyListPdfUrl = parseNullableString(body.armyListPdfUrl);
+    const armyListPdfUrl2 = parseNullableString(body.armyListPdfUrl2);
+    const scoreSheetUrl = parseNullableString(body.scoreSheetUrl);
+
     const game = await prisma.game.create({
       data: {
         gameType,
@@ -67,7 +78,11 @@ export async function POST(req: Request) {
         oppFaction: body.oppFaction || null,
         oppDetachment: body.oppDetachment || null,
 
-        armyListPdfUrl: body.armyListPdfUrl || null,
+        // ✅ 40k: 2 listes + fiche de scores
+        armyListPdfUrl,
+        armyListPdfUrl2,
+        scoreSheetUrl,
+
         photoUrls,
       },
     });
