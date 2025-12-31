@@ -7,13 +7,24 @@ export const revalidate = 0;
 
 const prisma = new PrismaClient();
 
+async function getId(params: unknown): Promise<string | null> {
+  // Supporte params = {id} OU params = Promise<{id}>
+  const p: any = params;
+  const resolved = p && typeof p.then === "function" ? await p : p;
+  const id = resolved?.id;
+  return typeof id === "string" && id.length > 0 ? id : null;
+}
+
 export default async function Page({
   params,
 }: {
-  params: { id: string };
+  params: any; // volontaire: Next peut fournir une Promise ici
 }) {
+  const id = await getId(params);
+  if (!id) return notFound();
+
   const game = await prisma.game.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
 
   if (!game) return notFound();
@@ -22,7 +33,7 @@ export default async function Page({
     <main className="mx-auto max-w-3xl p-6 space-y-4 text-white">
       <Link
         href="/40k/games"
-        className="inline-block rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold text-black hover:bg-white"
+        className="inline-block rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold text-black transition hover:bg-white"
       >
         ← Retour
       </Link>
