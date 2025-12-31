@@ -8,13 +8,14 @@ export const revalidate = 0;
 const prisma = new PrismaClient();
 
 async function getId(params: any): Promise<string | null> {
-  const resolved = params && typeof params.then === "function" ? await params : params;
+  const resolved =
+    params && typeof params.then === "function" ? await params : params;
   const id = resolved?.id;
   return typeof id === "string" && id.length > 0 ? id : null;
 }
 
-function fmtDate(isoOrDate: Date) {
-  return new Date(isoOrDate).toLocaleString("fr-FR", {
+function fmtDate(d: Date) {
+  return new Date(d).toLocaleString("fr-FR", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -61,7 +62,8 @@ export default async function Page({ params }: { params: any }) {
                 {g.myDetachment ? ` (${g.myDetachment})` : ""}
               </div>
               <div className="mt-1">
-                Adverse : <span className="font-semibold">{g.oppFaction ?? "—"}</span>
+                Adverse :{" "}
+                <span className="font-semibold">{g.oppFaction ?? "—"}</span>
                 {g.oppDetachment ? ` (${g.oppDetachment})` : ""}
               </div>
             </div>
@@ -86,7 +88,9 @@ export default async function Page({ params }: { params: any }) {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-            <div className="text-xs font-semibold text-gray-200">Liste d’armée (PDF)</div>
+            <div className="text-xs font-semibold text-gray-200">
+              Liste d’armée (PDF)
+            </div>
             <div className="mt-2">
               {g.armyListPdfUrl ? (
                 <a
@@ -116,8 +120,7 @@ export default async function Page({ params }: { params: any }) {
           {photos.length ? (
             <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
               {photos.map((url, i) => (
-                <a key={url} href={url} target="_blank" rel="noreferrer">
-                  {/* miniatures simples */}
+                <a key={`${url}-${i}`} href={url} target="_blank" rel="noreferrer">
                   <img
                     src={url}
                     alt={`Photo ${i + 1}`}
