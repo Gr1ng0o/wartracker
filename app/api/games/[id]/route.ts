@@ -1,11 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 
-export const runtime = "nodejs"; // ✅ Prisma doit tourner en nodejs
+export const runtime = "nodejs"; // Prisma doit tourner en nodejs
 
 const prisma = new PrismaClient();
 
 async function getId(ctx: any): Promise<string | null> {
-  const p = ctx?.params && typeof ctx.params.then === "function" ? await ctx.params : ctx?.params;
+  const p =
+    ctx?.params && typeof ctx.params.then === "function"
+      ? await ctx.params
+      : ctx?.params;
   const id = p?.id;
   return typeof id === "string" && id.length > 0 ? id : null;
 }
@@ -28,7 +31,30 @@ export async function PATCH(req: Request, ctx: any) {
   } catch (e: any) {
     console.error("PATCH /api/games/[id] ERROR =", e);
     return Response.json(
-      { error: "Erreur serveur lors de la mise à jour", details: String(e?.message ?? e) },
+      {
+        error: "Erreur serveur lors de la mise à jour",
+        details: String(e?.message ?? e),
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(_: Request, ctx: any) {
+  try {
+    const id = await getId(ctx);
+    if (!id) return Response.json({ error: "Missing id" }, { status: 400 });
+
+    await prisma.game.delete({ where: { id } });
+
+    return Response.json({ ok: true });
+  } catch (e: any) {
+    console.error("DELETE /api/games/[id] ERROR =", e);
+    return Response.json(
+      {
+        error: "Erreur serveur lors de la suppression",
+        details: String(e?.message ?? e),
+      },
       { status: 500 }
     );
   }
