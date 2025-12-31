@@ -3,8 +3,15 @@
 import { useMemo, useState } from "react";
 import type { GameDTO } from "../types";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-export default function GamesClient({ initialGames }: { initialGames: GameDTO[] }) {
+export default function GamesClient({
+  initialGames,
+}: {
+  initialGames: GameDTO[];
+}) {
+  const router = useRouter();
+
   const [type, setType] = useState<"all" | "40k" | "FaB">("all");
   const [q, setQ] = useState("");
 
@@ -25,6 +32,23 @@ export default function GamesClient({ initialGames }: { initialGames: GameDTO[] 
   const wins = filtered.filter((g) => g.result === "W").length;
   const losses = filtered.filter((g) => g.result === "L").length;
   const winrate = total ? Math.round((wins / total) * 100) : 0;
+
+  async function deleteGame(id: string) {
+    const confirmed = confirm("Supprimer définitivement cette partie ?");
+    if (!confirmed) return;
+
+    const res = await fetch(`/api/games/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      alert("Erreur lors de la suppression");
+      return;
+    }
+
+    // refresh soft (sans recharger toute la page)
+    router.refresh();
+  }
 
   return (
     <main className="mx-auto max-w-4xl p-6">
@@ -82,29 +106,42 @@ export default function GamesClient({ initialGames }: { initialGames: GameDTO[] 
 
           return (
             <li key={g.id} className="rounded-xl shadow-lg">
-              <Link
-                href={`/games/${g.id}`}
-                className="block rounded-xl bg-black/50 backdrop-blur-sm p-4 text-white hover:bg-white/5 transition"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="space-y-1">
-                    {/* ❌ plus de soulignement */}
-                    <div className="font-semibold">
-                      {g.gameType} — {g.build} vs {g.opponent}
+              <div className="relative rounded-xl bg-black/50 backdrop-blur-sm p-4 text-white">
+                {/* lien détail */}
+                <Link
+                  href={`/40k/games/${g.id}`}
+                  className="block hover:bg-white/5 transition rounded-lg"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <div className="font-semibold">
+                        {g.gameType} — {g.build} vs {g.opponent}
+                      </div>
+
+                      <div className="text-xs text-gray-300">
+                        Enregistrée le {dateStr}
+                      </div>
                     </div>
 
-                    {/* ✅ date + heure */}
-                    <div className="text-xs text-gray-300">
-                      Enregistrée le {dateStr}
-                    </div>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}`}
+                    >
+                      {badgeText}
+                    </span>
                   </div>
+                </Link>
 
-                  {/* ✅ badge victoire / défaite */}
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass}`}>
-                    {badgeText}
-                  </span>
-                </div>
-              </Link>
+                {/* bouton suppression */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteGame(g.id);
+                  }}
+                  className="absolute right-3 bottom-3 rounded-lg bg-red-600/80 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
+                >
+                  Supprimer
+                </button>
+              </div>
             </li>
           );
         })}
