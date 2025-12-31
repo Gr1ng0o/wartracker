@@ -2,20 +2,17 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-type Ctx =
-  | { params: { id: string } }
-  | { params: Promise<{ id: string }> };
-
-export async function PATCH(req: Request, ctx: Ctx) {
-  const { id } = await (ctx as any).params; // support params Promise ou object
-  const body = await req.json();
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const body = await req.json().catch(() => ({}));
+  const notes = typeof body?.notes === "string" ? body.notes : "";
 
   const updated = await prisma.game.update({
-    where: { id },
-    data: {
-      notes: typeof body.notes === "string" ? body.notes : undefined,
-      // Tu peux autoriser d'autres champs plus tard si tu veux
-    },
+    where: { id: params.id },
+    data: { notes },
+    select: { id: true, notes: true },
   });
 
   return Response.json(updated);

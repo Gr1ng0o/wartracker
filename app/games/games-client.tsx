@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { GameDTO } from "../types";
+import Link from "next/link";
 
 export default function GamesClient({
   initialGames,
@@ -35,13 +36,13 @@ export default function GamesClient({
       <div className="rounded-2xl bg-black/60 backdrop-blur-md p-6 text-white shadow-xl">
         <div>
           <h1 className="text-3xl font-bold">Parties</h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-400">
             Winrate :{" "}
             <span className="font-semibold">{winrate}%</span> ({wins}/{total})
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="mt-4 flex gap-2">
           <select
             className="rounded-lg border px-3 py-2 text-black"
             value={type}
@@ -67,17 +68,31 @@ export default function GamesClient({
             key={g.id}
             className="rounded-xl bg-black/50 backdrop-blur-sm p-4 text-white shadow-lg"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="font-semibold">
-                {g.gameType} — {g.build} vs {g.opponent}
+            {/* ✅ TOUT LE HEADER EST CLIQUABLE */}
+            <Link
+              href={`/games/${g.id}`}
+              className="block rounded-lg p-2 -m-2 hover:bg-white/5 transition"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="font-semibold underline underline-offset-4">
+                  {g.gameType} — {g.build} vs {g.opponent}
+                </div>
+
+                <div className="text-xs text-gray-300">
+                  {new Date(g.createdAt).toLocaleString()}
+                </div>
               </div>
-            </div>
 
-            {g.notes && <p className="mt-2 text-sm">{g.notes}</p>}
+              <div className="mt-2 text-sm text-gray-200">
+                {g.notes && g.notes.trim() !== ""
+                  ? g.notes
+                  : "— (aucun commentaire) —"}
+              </div>
 
-            <p className="mt-2 text-xs text-gray-400">
-              {new Date(g.createdAt).toLocaleString()}
-            </p>
+              <div className="mt-2 text-xs text-gray-400">
+                Cliquer pour voir le détail →
+              </div>
+            </Link>
           </li>
         ))}
       </ul>
