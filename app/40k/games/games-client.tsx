@@ -25,9 +25,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 function badgeClass(result?: string | null) {
-  if (result === "W") return "bg-green-600/15 text-green-300 ring-1 ring-green-600/30";
-  if (result === "L") return "bg-red-600/15 text-red-300 ring-1 ring-red-600/30";
-  if (result === "D") return "bg-amber-500/10 text-amber-200 ring-1 ring-amber-400/20";
+  if (result === "W")
+    return "bg-green-600/15 text-green-300 ring-1 ring-green-600/30";
+  if (result === "L")
+    return "bg-red-600/15 text-red-300 ring-1 ring-red-600/30";
+  if (result === "D")
+    return "bg-amber-500/10 text-amber-200 ring-1 ring-amber-400/20";
   return "bg-white/10 text-gray-200 ring-1 ring-white/20";
 }
 
@@ -57,7 +60,11 @@ function missionLine(g: any) {
   return parts.length ? parts.join(" – ") : null;
 }
 
-export default function GamesClient40k({ initialGames }: { initialGames: GameDTO[] }) {
+export default function GamesClient40k({
+  initialGames,
+}: {
+  initialGames: GameDTO[];
+}) {
   const router = useRouter();
   const [q, setQ] = useState("");
 
@@ -72,24 +79,19 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
 
     return only40k.filter((g: any) => {
       const hay = [
-        // identity
         g.opponent,
         typeof g.points === "number" ? String(g.points) : "",
-        // mission/table
         g.missionPack,
         g.primaryMission,
         g.deployment,
         g.terrainLayout,
-        // armies
         g.myFaction,
         g.myDetachment,
         g.oppFaction,
         g.oppDetachment,
-        // score/result
         typeof g.myScore === "number" ? String(g.myScore) : "",
         typeof g.oppScore === "number" ? String(g.oppScore) : "",
         g.result,
-        // notes
         g.notes,
       ]
         .filter(Boolean)
@@ -105,7 +107,6 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
   const losses = filtered.filter((g) => g.result === "L").length;
   const draws = filtered.filter((g) => g.result === "D").length;
 
-  // Winrate sur parties décisives, plus lisible en compétitif
   const decisive = wins + losses;
   const winrate = decisive ? Math.round((wins / decisive) * 100) : 0;
 
@@ -150,16 +151,22 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
         <div className="rounded-[28px] border border-white/10 bg-black/55 p-6 sm:p-8 shadow-[0_30px_120px_rgba(0,0,0,0.85)] backdrop-blur-md">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="text-xs tracking-[0.45em] text-white/40">WARHAMMER</div>
+              <div className="text-xs tracking-[0.45em] text-white/40">
+                WARHAMMER
+              </div>
               <h1 className="mt-1 text-3xl sm:text-4xl font-extrabold tracking-[0.04em] text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.85)]">
                 Parties 40k
               </h1>
 
               <p className="mt-2 text-sm text-white/65">
-                Affichées : <span className="font-semibold text-white/90">{total}</span> • W :{" "}
-                <span className="font-semibold text-white/90">{wins}</span> • L :{" "}
-                <span className="font-semibold text-white/90">{losses}</span> • D :{" "}
-                <span className="font-semibold text-white/90">{draws}</span> • Winrate :{" "}
+                Affichées :{" "}
+                <span className="font-semibold text-white/90">{total}</span> • W
+                : <span className="font-semibold text-white/90">{wins}</span> •
+                L :{" "}
+                <span className="font-semibold text-white/90">{losses}</span> •
+                D :{" "}
+                <span className="font-semibold text-white/90">{draws}</span> •
+                Winrate :{" "}
                 <span className="font-semibold text-white/90">{winrate}%</span>{" "}
                 <span className="text-white/40">(sur W/L)</span>
               </p>
@@ -169,24 +176,24 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
 
             <div className="flex gap-2">
               <Link
-  href="/40k/add-game"
-  className="
-    inline-flex items-center justify-center
-    rounded-xl
-    border border-white/10
-    bg-black/60
-    px-4 py-2
-    text-sm font-semibold text-white/85
-    shadow-[0_10px_30px_rgba(0,0,0,0.8)]
-    backdrop-blur
-    transition
-    hover:bg-black/75
-    hover:border-amber-200/20
-    hover:text-white
-  "
->
-  + Ajouter une partie
-</Link>
+                href="/40k/add-game"
+                className="
+                  inline-flex items-center justify-center
+                  rounded-xl
+                  border border-white/10
+                  bg-black/60
+                  px-4 py-2
+                  text-sm font-semibold text-white/85
+                  shadow-[0_10px_30px_rgba(0,0,0,0.8)]
+                  backdrop-blur
+                  transition
+                  hover:bg-black/75
+                  hover:border-amber-200/20
+                  hover:text-white
+                "
+              >
+                + Ajouter une partie
+              </Link>
             </div>
           </div>
 
@@ -211,19 +218,26 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
 
             const titleLeft =
               (g.myFaction || "Ta faction") +
-              (g.oppFaction ? ` vs ${g.oppFaction}` : g.opponent ? ` vs ${g.opponent}` : "");
+              (g.oppFaction
+                ? ` vs ${g.oppFaction}`
+                : g.opponent
+                ? ` vs ${g.opponent}`
+                : "");
 
             const mLine = missionLine(g);
 
-            const hasMyPdf = !!(g.myArmyPdfUrl || g.armyListPdfUrl); // compat si ancien champ
+            const hasMyPdf = !!(g.myArmyPdfUrl || g.armyListPdfUrl);
             const hasOppPdf = !!(g.oppArmyPdfUrl || g.armyListPdfUrl2);
-            const hasPhotos = Array.isArray(g.photoUrls) ? g.photoUrls.length > 0 : false;
+            const hasPhotos = Array.isArray(g.photoUrls)
+              ? g.photoUrls.length > 0
+              : false;
 
             return (
+              // ✅ Card = Link (a) => plus de <button> dans <button>
               <Link
                 key={g.id}
                 href={`/40k/games/${g.id}`}
-                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-black/50 backdrop-blur-sm p-4 text-white shadow-[0_18px_60px_rgba(0,0,0,0.75)] transition hover:border-amber-200/25 hover:bg-black/60"
+                className="group relative block w-full text-left overflow-hidden rounded-2xl border border-white/10 bg-black/50 backdrop-blur-sm p-4 text-white shadow-[0_18px_60px_rgba(0,0,0,0.75)] transition hover:border-amber-200/25 hover:bg-black/60"
               >
                 {/* subtle glow */}
                 <div className="pointer-events-none absolute -inset-24 opacity-0 group-hover:opacity-100 transition duration-500 bg-[radial-gradient(circle,rgba(255,170,70,0.12),transparent_60%)]" />
@@ -232,7 +246,11 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
                 <div className="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass(g.result)}`}>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass(
+                          g.result
+                        )}`}
+                      >
                         {resultLabel(g.result)}
                       </span>
 
@@ -267,13 +285,21 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
                       ) : null}
                     </div>
 
-                    <div className="mt-2 truncate text-base font-semibold">{titleLeft}</div>
+                    <div className="mt-2 truncate text-base font-semibold">
+                      {titleLeft}
+                    </div>
 
                     <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/60">
                       <span>Jouée le {dateStr}</span>
-                      {g.opponent ? <span>• Opponent: {g.opponent}</span> : null}
-                      {g.myDetachment ? <span>• My detachment: {g.myDetachment}</span> : null}
-                      {g.oppDetachment ? <span>• Opp detachment: {g.oppDetachment}</span> : null}
+                      {g.opponent ? (
+                        <span>• Opponent: {g.opponent}</span>
+                      ) : null}
+                      {g.myDetachment ? (
+                        <span>• My detachment: {g.myDetachment}</span>
+                      ) : null}
+                      {g.oppDetachment ? (
+                        <span>• Opp detachment: {g.oppDetachment}</span>
+                      ) : null}
                     </div>
 
                     {mLine ? (
@@ -295,9 +321,11 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
                       Open →
                     </span>
 
+                    {/* ✅ bouton séparé à l’intérieur du Link */}
                     <button
+                      type="button"
                       onClick={(e) => {
-                        e.preventDefault();
+                        e.preventDefault(); // ✅ empêche la navigation du Link
                         e.stopPropagation();
                         deleteGame(g.id);
                       }}
@@ -320,7 +348,9 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
         </div>
 
         <div className="mt-8 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <div className="mt-4 text-center text-xs text-white/35">The Long War is logged.</div>
+        <div className="mt-4 text-center text-xs text-white/35">
+          The Long War is logged.
+        </div>
       </div>
     </main>
   );

@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma"
 
 export const runtime = "nodejs"; // Prisma doit tourner en nodejs
 
-const prisma = new PrismaClient();
 
 async function getId(ctx: any): Promise<string | null> {
   const p =

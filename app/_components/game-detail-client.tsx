@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { GameDTO } from "../../types";
+import type { GameDTO } from "../types";
 
 function Field({ label, value }: { label: string; value: string }) {
   return (

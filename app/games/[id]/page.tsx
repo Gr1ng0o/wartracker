@@ -2,13 +2,12 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import Link from "next/link";
-import { PrismaClient } from "@prisma/client";
 import type { GameDTO } from "../../types";
-import GameDetailClient from "./game-detail-client";
+import GameDetailClient from "../../_components/game-detail-client";
 
 export const runtime = "nodejs";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
 
 type Ctx =
   | { params: { id: string } }
