@@ -233,11 +233,10 @@ export default function GamesClient40k({
               : false;
 
             return (
-              // ✅ Card = Link (a) => plus de <button> dans <button>
               <Link
                 key={g.id}
                 href={`/40k/games/${g.id}`}
-                className="group relative block w-full text-left overflow-hidden rounded-2xl border border-white/10 bg-black/50 backdrop-blur-sm p-4 text-white shadow-[0_18px_60px_rgba(0,0,0,0.75)] transition hover:border-amber-200/25 hover:bg-black/60"
+                className="group relative block w-full overflow-hidden rounded-2xl border border-white/10 bg-black/50 backdrop-blur-sm p-4 text-white shadow-[0_18px_60px_rgba(0,0,0,0.75)] transition hover:border-amber-200/25 hover:bg-black/60"
               >
                 {/* subtle glow */}
                 <div className="pointer-events-none absolute -inset-24 opacity-0 group-hover:opacity-100 transition duration-500 bg-[radial-gradient(circle,rgba(255,170,70,0.12),transparent_60%)]" />
@@ -291,9 +290,7 @@ export default function GamesClient40k({
 
                     <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/60">
                       <span>Jouée le {dateStr}</span>
-                      {g.opponent ? (
-                        <span>• Opponent: {g.opponent}</span>
-                      ) : null}
+                      {g.opponent ? <span>• Opponent: {g.opponent}</span> : null}
                       {g.myDetachment ? (
                         <span>• My detachment: {g.myDetachment}</span>
                       ) : null}
@@ -321,19 +318,34 @@ export default function GamesClient40k({
                       Open →
                     </span>
 
-                    {/* ✅ bouton séparé à l’intérieur du Link */}
-                    <button
-                      type="button"
+                    {/* ✅ IMPORTANT : pas de <button> dans un <a> (Link) */}
+                    <div
+                      role="button"
+                      tabIndex={0}
                       onClick={(e) => {
-                        e.preventDefault(); // ✅ empêche la navigation du Link
+                        e.preventDefault();
                         e.stopPropagation();
                         deleteGame(g.id);
                       }}
-                      className="rounded-xl bg-red-600/80 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          deleteGame(g.id);
+                        }
+                      }}
+                      className="
+                        cursor-pointer select-none
+                        rounded-xl bg-red-600/80 px-3 py-2
+                        text-xs font-semibold text-white
+                        hover:bg-red-700
+                        ring-1 ring-white/10
+                        focus:outline-none focus:ring-2 focus:ring-red-300/30
+                      "
                       title="Supprimer"
                     >
                       Supprimer
-                    </button>
+                    </div>
                   </div>
                 </div>
               </Link>

@@ -61,12 +61,33 @@ export default async function GameDetailPage({
   };
 
   return (
-    <main className="mx-auto max-w-3xl p-6 space-y-4">
-      <Link href="/40k/games" className="underline">
-        ← Retour à l’historique 40k
+    <main className="relative mx-auto max-w-5xl p-6">
+      {/* ✅ Retour toujours visible (au-dessus de tout) */}
+      <Link
+        href="/40k/games"
+        className="
+          fixed left-4 top-4 z-50
+          inline-flex items-center gap-2
+          rounded-full
+          border border-white/15
+          bg-black/80
+          px-4 py-2
+          text-sm font-semibold text-white
+          shadow-[0_12px_40px_rgba(0,0,0,0.85)]
+          backdrop-blur
+          hover:bg-black/90
+          hover:border-amber-200/30
+          transition
+        "
+      >
+        <span className="text-white/80">←</span>
+        <span>Historique 40k</span>
       </Link>
 
-      <GameDetailClient game={safeGame} />
+      {/* ✅ petit spacer pour éviter que le bouton fixe recouvre le contenu */}
+      <div className="pt-14">
+        <GameDetailClient game={safeGame} />
+      </div>
     </main>
   );
 }
