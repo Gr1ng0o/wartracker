@@ -20,30 +20,20 @@ function parseNullableString(v: unknown): string | null {
   return s.length ? s : null;
 }
 
-function parseNullableDate(v: unknown): Date | null {
-  const s = parseNullableString(v);
-  if (!s) return null;
-  const d = new Date(s);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
-/** ✅ accepte soit string (textarea), soit array */
-function parseStringArrayLoose(v: unknown): string[] {
+// ✅ accepte textarea (string) ou array
+function parsePhotoUrls(v: unknown): string[] {
   if (Array.isArray(v)) {
     return v
       .filter((x) => typeof x === "string")
       .map((x) => x.trim())
       .filter(Boolean);
   }
-
   if (typeof v === "string") {
-    // textarea "1 lien par ligne"
     return v
       .split(/\r?\n/)
       .map((x) => x.trim())
       .filter(Boolean);
   }
-
   return [];
 }
 
@@ -51,103 +41,79 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    // gameType
     const gameType = parseNullableString(body.gameType) ?? "40k";
 
+    // requis (dans TON schema: build, opponent, first, result)
+    const build = parseNullableString(body.build) ?? "—";
     const opponent = parseNullableString(body.opponent);
     if (!opponent) {
-      return Response.json(
-        { error: "Champs requis manquants", details: { opponent } },
-        { status: 400 }
-      );
+      return Response.json({ error: "Champs requis manquants: opponent" }, { status: 400 });
     }
 
-    const playedAt = parseNullableDate(body.playedAt);
-    const points = parseNullableInt(body.points);
+    const first = typeof body.first === "boolean" ? body.first : true;
 
-    const missionPack = parseNullableString(body.missionPack);
-    const primaryMission = parseNullableString(body.primaryMission);
-    const deployment = parseNullableString(body.deployment);
-    const terrainLayout = parseNullableString(body.terrainLayout);
+    // result W/L/D -> ton schema dit "W|L" mais on tolère D en front => on garde string
+    const result =
+      body.result === "W" || body.result === "L" || body.result === "D"
+        ? body.result
+        : "W";
 
+    // legacy fields présents dans schema
+    const score = parseNullableInt(body.score);
+    const tag1 = parseNullableString(body.tag1);
+    const tag2 = parseNullableString(body.tag2);
+    const notes = parseNullableString(body.notes);
+
+    // 40k (existants)
     const myFaction = parseNullableString(body.myFaction);
     const myDetachment = parseNullableString(body.myDetachment);
     const oppFaction = parseNullableString(body.oppFaction);
     const oppDetachment = parseNullableString(body.oppDetachment);
 
+    const myScore = parseNullableInt(body.myScore);
+    const oppScore = parseNullableInt(body.oppScore);
+
+    // uploads existants
     const myArmyPdfUrl = parseNullableString(body.myArmyPdfUrl);
     const oppArmyPdfUrl = parseNullableString(body.oppArmyPdfUrl);
+    const scoreSheetUrl = parseNullableString(body.scoreSheetUrl);
 
-    const myListText = parseNullableString(body.myListText);
-    const oppListText = parseNullableString(body.oppListText);
-
-    const myScore =
-      body.myScore !== undefined ? parseNullableNumber(body.myScore) : null;
-    const oppScore =
-      body.oppScore !== undefined ? parseNullableNumber(body.oppScore) : null;
-
-    let result: "W" | "L" | "D" =
-      body.result === "W" || body.result === "L" || body.result === "D"
-        ? body.result
-        : "W";
-
-    if (myScore !== null && oppScore !== null) {
-      result = myScore === oppScore ? "D" : myScore > oppScore ? "W" : "L";
-    }
-
-    const notes = parseNullableString(body.notes);
-
-    // ✅ important: accepte textarea
-    const photoUrls = parseStringArrayLoose(body.photoUrls);
+    const photoUrls = parsePhotoUrls(body.photoUrls);
 
     const game = await prisma.game.create({
       data: {
         gameType,
+        build,
         opponent,
+        first,
+        result,
 
-        playedAt: playedAt ?? undefined,
-        points: points ?? undefined,
-
-        missionPack: missionPack ?? undefined,
-        primaryMission: primaryMission ?? undefined,
-        deployment: deployment ?? undefined,
-        terrainLayout: terrainLayout ?? undefined,
+        score: score ?? undefined,
+        tag1: tag1 ?? undefined,
+        tag2: tag2 ?? undefined,
+        notes: notes ?? undefined,
 
         myFaction: myFaction ?? undefined,
         myDetachment: myDetachment ?? undefined,
         oppFaction: oppFaction ?? undefined,
         oppDetachment: oppDetachment ?? undefined,
+        myScore: myScore ?? undefined,
+        oppScore: oppScore ?? undefined,
 
         myArmyPdfUrl: myArmyPdfUrl ?? undefined,
         oppArmyPdfUrl: oppArmyPdfUrl ?? undefined,
-        myListText: myListText ?? undefined,
-        oppListText: oppListText ?? undefined,
-
-        myScore: myScore ?? undefined,
-        oppScore: oppScore ?? undefined,
-        result,
-
-        notes: notes ?? undefined,
+        scoreSheetUrl: scoreSheetUrl ?? undefined,
 
         photoUrls,
-      } as any,
+      },
     });
 
     return Response.json(game, { status: 201 });
   } catch (e: any) {
-    // ✅ log utile Vercel + Prisma
     console.error("POST /api/games ERROR =", e);
-    console.error("POST /api/games ERROR (string) =", String(e));
-    console.error("POST /api/games ERROR code =", e?.code);
-    console.error("POST /api/games ERROR meta =", e?.meta);
-    console.error("POST /api/games ERROR stack =", e?.stack);
-
     return Response.json(
-      {
-        error: "Erreur serveur lors de l'enregistrement",
-        details: e?.message ?? String(e),
-        code: e?.code ?? null,
-        meta: e?.meta ?? null,
-      },
+      { error: "Erreur serveur lors de l'enregistrement", details: e?.message ?? String(e) },
       { status: 500 }
     );
   }
