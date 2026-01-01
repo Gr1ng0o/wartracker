@@ -2,9 +2,19 @@
  * ✅ NOTES (à lire avant)
  * - Fichier : app/40k/games/games-client.tsx (Client Component)
  * - Rôle : page "review" / liste des parties 40k (route: /40k/games) côté UI
- * - Fonctions : recherche locale, stats (W/L/winrate), cards cliquables vers /40k/games/[id],
- *   suppression via DELETE /api/games/[id] puis router.refresh().
+ * - Fonctions :
+ *   - recherche locale
+ *   - stats (W/L/D + winrate)
+ *   - cards cliquables vers /40k/games/[id]
+ *   - suppression via DELETE /api/games/[id] puis router.refresh()
  * - Esthétique : grimdark (fond fumée/vignette + cards verre/acier + accents ambre) sans lib UI imposée.
+ *
+ * ✅ v1 Inputs (actuels)
+ * - Date jouée (playedAt), opponent, points
+ * - Mission line : missionPack / primaryMission / deployment / terrainLayout
+ * - Armées : factions/detachments + PDFs Drive optionnels + texte enrichi optionnel
+ * - Score final + résultat W/L/D
+ * - Notes + photos (liens Drive) optionnels
  */
 
 "use client";
@@ -17,6 +27,7 @@ import { useRouter } from "next/navigation";
 function badgeClass(result?: string | null) {
   if (result === "W") return "bg-green-600/15 text-green-300 ring-1 ring-green-600/30";
   if (result === "L") return "bg-red-600/15 text-red-300 ring-1 ring-red-600/30";
+  if (result === "D") return "bg-amber-500/10 text-amber-200 ring-1 ring-amber-400/20";
   return "bg-white/10 text-gray-200 ring-1 ring-white/20";
 }
 
@@ -27,8 +38,9 @@ function resultLabel(result?: string | null) {
   return result ?? "—";
 }
 
-function formatDate(createdAt: string) {
-  const d = new Date(createdAt);
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleString("fr-FR", {
     year: "numeric",
     month: "2-digit",
@@ -38,27 +50,47 @@ function formatDate(createdAt: string) {
   });
 }
 
+function missionLine(g: any) {
+  const parts = [g.missionPack, g.primaryMission, g.deployment, g.terrainLayout]
+    .map((x: any) => (typeof x === "string" ? x.trim() : ""))
+    .filter(Boolean);
+  return parts.length ? parts.join(" – ") : null;
+}
+
 export default function GamesClient40k({ initialGames }: { initialGames: GameDTO[] }) {
   const router = useRouter();
   const [q, setQ] = useState("");
 
+  const only40k = useMemo(
+    () => initialGames.filter((g) => g.gameType === "40k"),
+    [initialGames]
+  );
+
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase();
-    const only40k = initialGames.filter((g) => g.gameType === "40k");
-
     if (!qq) return only40k;
 
-    return only40k.filter((g) => {
+    return only40k.filter((g: any) => {
       const hay = [
+        // identity
         g.opponent,
-        g.build,
-        g.notes,
+        typeof g.points === "number" ? String(g.points) : "",
+        // mission/table
+        g.missionPack,
+        g.primaryMission,
+        g.deployment,
+        g.terrainLayout,
+        // armies
         g.myFaction,
         g.myDetachment,
         g.oppFaction,
         g.oppDetachment,
+        // score/result
         typeof g.myScore === "number" ? String(g.myScore) : "",
         typeof g.oppScore === "number" ? String(g.oppScore) : "",
+        g.result,
+        // notes
+        g.notes,
       ]
         .filter(Boolean)
         .join(" ")
@@ -66,12 +98,16 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
 
       return hay.includes(qq);
     });
-  }, [initialGames, q]);
+  }, [only40k, q]);
 
   const total = filtered.length;
   const wins = filtered.filter((g) => g.result === "W").length;
   const losses = filtered.filter((g) => g.result === "L").length;
-  const winrate = total ? Math.round((wins / total) * 100) : 0;
+  const draws = filtered.filter((g) => g.result === "D").length;
+
+  // Winrate sur parties décisives, plus lisible en compétitif
+  const decisive = wins + losses;
+  const winrate = decisive ? Math.round((wins / decisive) * 100) : 0;
 
   async function deleteGame(id: string) {
     const confirmed = confirm("Supprimer définitivement cette partie 40k ?");
@@ -120,10 +156,12 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
               </h1>
 
               <p className="mt-2 text-sm text-white/65">
-                Affichées : <span className="font-semibold text-white/90">{total}</span> • Victoires :{" "}
-                <span className="font-semibold text-white/90">{wins}</span> • Défaites :{" "}
-                <span className="font-semibold text-white/90">{losses}</span> • Winrate :{" "}
-                <span className="font-semibold text-white/90">{winrate}%</span>
+                Affichées : <span className="font-semibold text-white/90">{total}</span> • W :{" "}
+                <span className="font-semibold text-white/90">{wins}</span> • L :{" "}
+                <span className="font-semibold text-white/90">{losses}</span> • D :{" "}
+                <span className="font-semibold text-white/90">{draws}</span> • Winrate :{" "}
+                <span className="font-semibold text-white/90">{winrate}%</span>{" "}
+                <span className="text-white/40">(sur W/L)</span>
               </p>
 
               <div className="mt-3 h-px w-56 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
@@ -131,18 +169,31 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
 
             <div className="flex gap-2">
               <Link
-                href="/40k/add-game"
-                className="inline-flex w-fit items-center justify-center rounded-xl bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-900 hover:bg-white transition"
-              >
-                + Add game
-              </Link>
+  href="/40k/add-game"
+  className="
+    inline-flex items-center justify-center
+    rounded-xl
+    border border-white/10
+    bg-black/60
+    px-4 py-2
+    text-sm font-semibold text-white/85
+    shadow-[0_10px_30px_rgba(0,0,0,0.8)]
+    backdrop-blur
+    transition
+    hover:bg-black/75
+    hover:border-amber-200/20
+    hover:text-white
+  "
+>
+  + Ajouter une partie
+</Link>
             </div>
           </div>
 
           <div className="mt-4">
             <input
               className="w-full rounded-xl border border-white/10 bg-black/60 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35 focus:border-amber-200/30 focus:ring-1 focus:ring-amber-200/15"
-              placeholder="Rechercher (opponent / build / factions / notes / score)…"
+              placeholder="Rechercher (opponent / factions / missions / layout / notes / score / points)…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
@@ -151,16 +202,22 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
 
         {/* List */}
         <div className="mt-4 grid gap-3">
-          {filtered.map((g) => {
-            const dateStr = formatDate(g.createdAt);
+          {filtered.map((g: any) => {
+            const dateStr = formatDate(g.playedAt ?? g.createdAt);
             const scoreLine =
               typeof g.myScore === "number" && typeof g.oppScore === "number"
                 ? `${g.myScore} — ${g.oppScore}`
                 : null;
 
-            const leftTitle =
-              (g.myFaction || g.build || "Game") +
+            const titleLeft =
+              (g.myFaction || "Ta faction") +
               (g.oppFaction ? ` vs ${g.oppFaction}` : g.opponent ? ` vs ${g.opponent}` : "");
+
+            const mLine = missionLine(g);
+
+            const hasMyPdf = !!(g.myArmyPdfUrl || g.armyListPdfUrl); // compat si ancien champ
+            const hasOppPdf = !!(g.oppArmyPdfUrl || g.armyListPdfUrl2);
+            const hasPhotos = Array.isArray(g.photoUrls) ? g.photoUrls.length > 0 : false;
 
             return (
               <Link
@@ -179,32 +236,50 @@ export default function GamesClient40k({ initialGames }: { initialGames: GameDTO
                         {resultLabel(g.result)}
                       </span>
 
+                      {typeof g.points === "number" ? (
+                        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/80 ring-1 ring-white/10">
+                          {g.points} pts
+                        </span>
+                      ) : null}
+
                       {scoreLine ? (
                         <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/80 ring-1 ring-white/10">
                           Score {scoreLine}
                         </span>
                       ) : null}
 
-                      {g.first !== undefined ? (
-                        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/80 ring-1 ring-white/10">
-                          {g.first ? "First" : "Second"}
+                      {hasMyPdf ? (
+                        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/75 ring-1 ring-white/10">
+                          📄 PDF (toi)
+                        </span>
+                      ) : null}
+
+                      {hasOppPdf ? (
+                        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/75 ring-1 ring-white/10">
+                          📄 PDF (opp)
+                        </span>
+                      ) : null}
+
+                      {hasPhotos ? (
+                        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/75 ring-1 ring-white/10">
+                          🖼️ Photos
                         </span>
                       ) : null}
                     </div>
 
-                    <div className="mt-2 truncate text-base font-semibold">{leftTitle}</div>
+                    <div className="mt-2 truncate text-base font-semibold">{titleLeft}</div>
 
                     <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/60">
-                      <span>Enregistrée le {dateStr}</span>
+                      <span>Jouée le {dateStr}</span>
                       {g.opponent ? <span>• Opponent: {g.opponent}</span> : null}
                       {g.myDetachment ? <span>• My detachment: {g.myDetachment}</span> : null}
                       {g.oppDetachment ? <span>• Opp detachment: {g.oppDetachment}</span> : null}
                     </div>
 
-                    {g.build ? (
+                    {mLine ? (
                       <div className="mt-2 truncate text-sm text-white/75">
-                        <span className="text-white/45">Build:</span>{" "}
-                        <span className="text-white/90">{g.build}</span>
+                        <span className="text-white/45">Mission:</span>{" "}
+                        <span className="text-white/90">{mLine}</span>
                       </div>
                     ) : null}
 

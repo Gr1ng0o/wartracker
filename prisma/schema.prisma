@@ -31,12 +31,16 @@ model Game {
   myScore        Int?
   oppScore       Int?
 
-  // Listes d'armée (PDF)
-  armyListPdfUrl  String?   // liste 1 (existant)
-  armyListPdfUrl2 String?   // liste 2 (nouveau)
+  // ===== Uploads (optionnels) =====
+  // PDF liste de ton armée
+  myArmyPdfUrl   String?
 
-  // Fiche de scores (PDF ou image)
-  scoreSheetUrl   String?   // nouveau
+  // PDF liste de l'adversaire
+  oppArmyPdfUrl  String?
 
-  photoUrls       String[] @default([])
+  // Feuille de scores (PDF ou image)
+  scoreSheetUrl  String?
+
+  // Photos diverses (déjà existant)
+  photoUrls      String[] @default([])
 }
