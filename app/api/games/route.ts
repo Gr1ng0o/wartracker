@@ -20,6 +20,17 @@ function parseNullableNumber(v: unknown): number | null {
 }
 
 /**
+ * Convertit une valeur inconnue en int | null
+ * (utile pour points)
+ */
+function parseNullableInt(v: unknown): number | null {
+  const n = parseNullableNumber(v);
+  if (n === null) return null;
+  const i = Math.trunc(n);
+  return Number.isFinite(i) ? i : null;
+}
+
+/**
  * Convertit une valeur inconnue en string | null
  * - null / undefined → null
  * - string vide ou whitespace → null
@@ -32,117 +43,137 @@ function parseNullableString(v: unknown): string | null {
 }
 
 /**
+ * Convertit une valeur inconnue en Date | null (via ISO / Date.parse)
+ */
+function parseNullableDate(v: unknown): Date | null {
+  const s = parseNullableString(v);
+  if (!s) return null;
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * Normalise un tableau de liens (Drive ou autre) → string[]
+ */
+function parseStringArray(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .filter((x) => typeof x === "string")
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
+/**
  * POST /api/games
  * --------------------------------------------------
  * Rôle :
  * - créer une nouvelle partie (40k ou FaB)
- * - gérer champs legacy + uploads optionnels
+ * - v1 40k : date/opponent/points + mission line + factions + score + notes
+ * - médias : liens Google Drive (PDF/Photos) optionnels
  * - calculer automatiquement le résultat si scores fournis
  *
- * Uploads (optionnels) alignés sur schema.prisma :
- * - armyListPdfUrl  (PDF : ton armée)
- * - armyListPdfUrl2 (PDF : armée adverse)
- * - scoreSheetUrl   (PDF ou image : feuille de scores)
+ * ⚠️ Legacy retiré :
+ * - build/first/score/tag1/tag2/armyListPdfUrl/armyListPdfUrl2/scoreSheetUrl
  */
 export async function POST(req: Request) {
   try {
-    // Lecture du body JSON envoyé par le formulaire
     const body = await req.json();
 
     // Type de jeu (fallback 40k)
-    const gameType = body.gameType ?? "40k";
+    const gameType = parseNullableString(body.gameType) ?? "40k";
 
-    // Champs requis minimaux
-    const build = String(body.build ?? "").trim();
-    const opponent = String(body.opponent ?? "").trim();
-
-    if (!build || !opponent) {
+    // Champs requis minimaux v1
+    const opponent = parseNullableString(body.opponent);
+    if (!opponent) {
       return Response.json(
-        { error: "Champs requis manquants", details: { build, opponent } },
+        { error: "Champs requis manquants", details: { opponent } },
         { status: 400 }
       );
     }
 
-    // Scores 40k (optionnels)
+    // v1 identification
+    const playedAt = parseNullableDate(body.playedAt);
+    const points = parseNullableInt(body.points);
+
+    // v1 mission & table
+    const missionPack = parseNullableString(body.missionPack);
+    const primaryMission = parseNullableString(body.primaryMission);
+    const deployment = parseNullableString(body.deployment);
+    const terrainLayout = parseNullableString(body.terrainLayout);
+
+    // v1 armies
+    const myFaction = parseNullableString(body.myFaction);
+    const myDetachment = parseNullableString(body.myDetachment);
+    const oppFaction = parseNullableString(body.oppFaction);
+    const oppDetachment = parseNullableString(body.oppDetachment);
+
+    const myArmyPdfUrl = parseNullableString(body.myArmyPdfUrl); // Drive
+    const oppArmyPdfUrl = parseNullableString(body.oppArmyPdfUrl); // Drive
+
+    const myListText = parseNullableString(body.myListText);
+    const oppListText = parseNullableString(body.oppListText);
+
+    // Score & résultat
     const myScore =
       body.myScore !== undefined ? parseNullableNumber(body.myScore) : null;
     const oppScore =
       body.oppScore !== undefined ? parseNullableNumber(body.oppScore) : null;
 
-    // Score legacy (champ générique)
-    const legacyScore =
-      body.score !== undefined ? parseNullableNumber(body.score) : null;
+    // résultat demandé (optionnel)
+    let result: "W" | "L" | "D" =
+      body.result === "W" || body.result === "L" || body.result === "D"
+        ? body.result
+        : "W";
 
-    /**
-     * Résultat :
-     * - par défaut : body.result ou "W"
-     * - si myScore et oppScore sont présents → calcul auto
-     */
-    let result: "W" | "L" = body.result ?? "W";
+    // calcul auto si scores fournis
     if (myScore !== null && oppScore !== null) {
-      result = myScore > oppScore ? "W" : "L";
+      result = myScore === oppScore ? "D" : myScore > oppScore ? "W" : "L";
     }
 
-    /**
-     * Photos (tableau de strings)
-     * → on filtre tout ce qui n'est pas une string valide
-     */
-    const photoUrls: string[] = Array.isArray(body.photoUrls)
-      ? body.photoUrls.filter(
-          (x: unknown) => typeof x === "string" && x.length > 0
-        )
-      : [];
+    // Notes
+    const notes = parseNullableString(body.notes);
+
+    // Photos (liens Drive)
+    const photoUrls = parseStringArray(body.photoUrls);
 
     /**
-     * ===== Uploads distincts (alignés schema.prisma) =====
-     * - armyListPdfUrl  : PDF liste de ton armée
-     * - armyListPdfUrl2 : PDF liste de l'adversaire
-     * - scoreSheetUrl   : feuille de score (PDF ou image)
-     *
-     * Tous les champs sont nullable et donc optionnels.
-     */
-    const armyListPdfUrl = parseNullableString(body.armyListPdfUrl);
-    const armyListPdfUrl2 = parseNullableString(body.armyListPdfUrl2);
-    const scoreSheetUrl = parseNullableString(body.scoreSheetUrl);
-
-    /**
-     * Création de la partie en base
+     * Création en base
+     * NB: on utilise undefined pour "ne pas écrire" si champ optionnel
      */
     const game = await prisma.game.create({
       data: {
         gameType,
-        build,
+
         opponent,
-        first: Boolean(body.first),
+
+        playedAt: playedAt ?? undefined,
+        points: points ?? undefined,
+
+        missionPack: missionPack ?? undefined,
+        primaryMission: primaryMission ?? undefined,
+        deployment: deployment ?? undefined,
+        terrainLayout: terrainLayout ?? undefined,
+
+        myFaction: myFaction ?? undefined,
+        myDetachment: myDetachment ?? undefined,
+        oppFaction: oppFaction ?? undefined,
+        oppDetachment: oppDetachment ?? undefined,
+
+        myArmyPdfUrl: myArmyPdfUrl ?? undefined,
+        oppArmyPdfUrl: oppArmyPdfUrl ?? undefined,
+        myListText: myListText ?? undefined,
+        oppListText: oppListText ?? undefined,
+
+        myScore: myScore ?? undefined,
+        oppScore: oppScore ?? undefined,
         result,
 
-        // Scores
-        score: legacyScore,
-        myScore,
-        oppScore,
+        notes: notes ?? undefined,
 
-        // Métadonnées
-        tag1: body.tag1 || null,
-        tag2: body.tag2 || null,
-        notes: body.notes || null,
-
-        // 40k factions / détachements
-        myFaction: body.myFaction || null,
-        myDetachment: body.myDetachment || null,
-        oppFaction: body.oppFaction || null,
-        oppDetachment: body.oppDetachment || null,
-
-        // ✅ Uploads optionnels (noms Prisma corrects)
-        armyListPdfUrl,
-        armyListPdfUrl2,
-        scoreSheetUrl,
-
-        // Photos
         photoUrls,
-      },
+      } as any, // <- retire ce "as any" quand ton schema.prisma est 100% aligné
     });
 
-    // Retour de la partie créée
     return Response.json(game, { status: 201 });
   } catch (e: any) {
     console.error("POST /api/games ERROR =", e);
