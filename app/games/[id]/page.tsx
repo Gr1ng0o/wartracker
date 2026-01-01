@@ -6,6 +6,8 @@ import { PrismaClient } from "@prisma/client";
 import type { GameDTO } from "../../types";
 import GameDetailClient from "./game-detail-client";
 
+export const runtime = "nodejs";
+
 const prisma = new PrismaClient();
 
 type Ctx =
@@ -13,9 +15,10 @@ type Ctx =
   | { params: Promise<{ id: string }> };
 
 export default async function GameDetailPage(ctx: Ctx) {
-  const params = "then" in (ctx as any).params
-    ? await (ctx as { params: Promise<{ id: string }> }).params
-    : (ctx as { params: { id: string } }).params;
+  const params =
+    "then" in (ctx as any).params
+      ? await (ctx as { params: Promise<{ id: string }> }).params
+      : (ctx as { params: { id: string } }).params;
 
   const id = params?.id;
 
@@ -30,32 +33,8 @@ export default async function GameDetailPage(ctx: Ctx) {
     );
   }
 
-  const game = await prisma.game.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      createdAt: true,
-      gameType: true,
-      build: true,
-      opponent: true,
-      first: true,
-      result: true,
-      score: true,
-      tag1: true,
-      tag2: true,
-      notes: true,
-
-      myFaction: true,
-      myDetachment: true,
-      oppFaction: true,
-      oppDetachment: true,
-      myScore: true,
-      oppScore: true,
-
-      armyListPdfUrl: true,
-      photoUrls: true,
-    },
-  });
+  // ✅ pas de select => pas d’erreur TS Prisma sur champs inexistants
+  const game = await prisma.game.findUnique({ where: { id } });
 
   if (!game) {
     return (
@@ -68,29 +47,35 @@ export default async function GameDetailPage(ctx: Ctx) {
     );
   }
 
-  // ✅ mapping explicite (pas de spread)
+  // On cast en any pour lire des champs v1/legacy sans casser le build
+  const g: any = game;
+
   const safeGame: GameDTO = {
     id: game.id,
     createdAt: game.createdAt.toISOString(),
     gameType: game.gameType,
-    build: game.build,
-    opponent: game.opponent,
-    first: game.first,
-    result: game.result,
-    score: game.score,
-    tag1: game.tag1,
-    tag2: game.tag2,
-    notes: game.notes,
 
-    myFaction: game.myFaction,
-    myDetachment: game.myDetachment,
-    oppFaction: game.oppFaction,
-    oppDetachment: game.oppDetachment,
-    myScore: game.myScore,
-    oppScore: game.oppScore,
+    build: g.build ?? "",
+    opponent: g.opponent ?? "",
+    first: Boolean(g.first),
+    result: g.result ?? "—",
+    score: g.score ?? null,
+    tag1: g.tag1 ?? null,
+    tag2: g.tag2 ?? null,
+    notes: g.notes ?? null,
 
-    armyListPdfUrl: game.armyListPdfUrl,
-    photoUrls: game.photoUrls ?? [],
+    myFaction: g.myFaction ?? null,
+    myDetachment: g.myDetachment ?? null,
+    oppFaction: g.oppFaction ?? null,
+    oppDetachment: g.oppDetachment ?? null,
+    myScore: g.myScore ?? null,
+    oppScore: g.oppScore ?? null,
+
+    // Drive links : on utilise tes champs v1 si présents
+    armyListPdfUrl: g.myArmyPdfUrl ?? null,
+    armyListPdfUrl2: g.oppArmyPdfUrl ?? null,
+
+    photoUrls: Array.isArray(g.photoUrls) ? g.photoUrls : [],
   };
 
   return (
