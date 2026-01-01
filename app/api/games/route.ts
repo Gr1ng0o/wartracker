@@ -1,11 +1,12 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+export const runtime = "nodejs";
+
 
 /**
  * Prisma Client
  * → permet d'interagir avec la base PostgreSQL
  * ⚠️ runtime Node uniquement (OK dans App Router API)
  */
-const prisma = new PrismaClient();
 
 /**
  * Convertit une valeur inconnue en number | null

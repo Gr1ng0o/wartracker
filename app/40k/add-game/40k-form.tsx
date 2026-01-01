@@ -179,18 +179,34 @@ export default function Add40kForm() {
         }),
       });
 
-      if (!res.ok) {
-        let msg = "Erreur lors de l'enregistrement";
-        try {
-          const j = await res.json();
-          msg = j?.error ?? msg;
-        } catch {
-          const t = await res.text().catch(() => "");
-          if (t) msg = t;
-        }
-        alert(msg);
-        return;
-      }
+     if (!res.ok) {
+  let msg = `Erreur serveur (${res.status})`;
+
+  try {
+    // 1️⃣ On tente JSON (API Next / Prisma renvoient souvent { error })
+    const data = await res.json();
+    if (typeof data === "string") {
+      msg += `\n\n${data}`;
+    } else if (data?.error) {
+      msg += `\n\n${data.error}`;
+    } else {
+      msg += `\n\n${JSON.stringify(data, null, 2)}`;
+    }
+  } catch {
+    try {
+      // 2️⃣ Sinon texte brut
+      const text = await res.text();
+      if (text) msg += `\n\n${text}`;
+    } catch {
+      // 3️⃣ Rien à lire → message par défaut
+      msg += `\n\nUne erreur inconnue est survenue.`;
+    }
+  }
+
+  alert(msg);
+  return;
+}
+
 
       alert("Partie 40k enregistrée ✅");
       router.push("/40k/games");
