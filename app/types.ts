@@ -19,15 +19,15 @@ export type GameDTO = {
    * LEGACY (à garder pour build)
    * ========================= */
 
-  build?: string;               // utilisé par anciennes pages
+  build?: string; // utilisé par anciennes pages
   first?: boolean;
   score?: number | null;
   tag1?: string | null;
   tag2?: string | null;
 
   // anciens noms PDF (encore référencés dans du code legacy)
-  armyListPdfUrl?: string | null;   // = myArmyPdfUrl
-  armyListPdfUrl2?: string | null;  // = oppArmyPdfUrl
+  armyListPdfUrl?: string | null;  // = myArmyPdfUrl
+  armyListPdfUrl2?: string | null; // = oppArmyPdfUrl
 
   /* =========================
    * V1 – WarTracker 40k
@@ -54,6 +54,9 @@ export type GameDTO = {
   oppDetachment?: string | null;
   oppArmyPdfUrl?: string | null; // Drive (adversaire)
   oppListText?: string | null;
+
+  // ✅ Feuille de score finale (Drive) — PDF ou photo
+  scoreSheetUrl?: string | null;
 
   // 4) Score & résultat
   myScore?: number | null;

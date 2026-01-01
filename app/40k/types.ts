@@ -55,6 +55,9 @@ export type GameDTO = {
   oppArmyPdfUrl?: string | null; // Drive (adversaire)
   oppListText?: string | null;
 
+  // ✅ Feuille de score finale (Drive) — PDF ou photo
+  scoreSheetUrl?: string | null;
+
   // 4) Score & résultat
   myScore?: number | null;
   oppScore?: number | null;

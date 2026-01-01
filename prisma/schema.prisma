@@ -17,7 +17,7 @@ model Game {
   build     String
   opponent  String
   first     Boolean  @default(true)
-  result    String   // "W" | "L"
+  result    String   // "W" | "L" | "D" (si tu l'utilises)
   score     Int?
   tag1      String?
   tag2      String?
@@ -38,9 +38,9 @@ model Game {
   // PDF liste de l'adversaire
   oppArmyPdfUrl  String?
 
-  // Feuille de scores (PDF ou image)
+  // Feuille de score (PDF ou image)
   scoreSheetUrl  String?
 
-  // Photos diverses (déjà existant)
+  // Photos diverses
   photoUrls      String[] @default([])
 }

@@ -52,6 +52,9 @@ export default async function GameDetailPage({
     oppArmyPdfUrl: g.oppArmyPdfUrl ?? null,
     oppListText: g.oppListText ?? null,
 
+    // ✅ Feuille de score (Drive) — PDF ou photo
+    scoreSheetUrl: g.scoreSheetUrl ?? null,
+
     myScore: g.myScore ?? null,
     oppScore: g.oppScore ?? null,
     result: g.result ?? "—",

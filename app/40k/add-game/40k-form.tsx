@@ -18,7 +18,10 @@ function toIsoDateTimeLocalValue(d: Date) {
 function isProbablyDriveUrl(url: string) {
   const u = url.trim().toLowerCase();
   if (!u) return true; // champ vide = ok
-  return u.startsWith("https://drive.google.com/") || u.startsWith("https://docs.google.com/");
+  return (
+    u.startsWith("https://drive.google.com/") ||
+    u.startsWith("https://docs.google.com/")
+  );
 }
 
 function normalizeUrlList(raw: string) {
@@ -54,6 +57,9 @@ export default function Add40kForm() {
   const [myArmyPdfUrl, setMyArmyPdfUrl] = useState("");
   const [oppArmyPdfUrl, setOppArmyPdfUrl] = useState("");
 
+  // ✅ Feuille de score (Drive) — PDF ou photo (optionnel)
+  const [scoreSheetUrl, setScoreSheetUrl] = useState("");
+
   // Texte enrichi (optionnels)
   const [myListText, setMyListText] = useState("");
   const [oppListText, setOppListText] = useState("");
@@ -68,13 +74,16 @@ export default function Add40kForm() {
   }, [myScore, oppScore]);
 
   const resultLabel =
-    computedResult === "D" ? "Égalité" : computedResult === "W" ? "Victoire" : "Défaite";
+    computedResult === "D"
+      ? "Égalité"
+      : computedResult === "W"
+      ? "Victoire"
+      : "Défaite";
 
   // 5) Notes (unique champ)
   const [notes, setNotes] = useState("");
 
   // 6) Médias Drive (optionnels)
-  // -> on laisse 2 approches: soit 1 lien par ligne, soit un dossier Drive unique.
   const [photoLinksRaw, setPhotoLinksRaw] = useState("");
 
   const photoUrls = useMemo(() => normalizeUrlList(photoLinksRaw), [photoLinksRaw]);
@@ -99,6 +108,9 @@ export default function Add40kForm() {
     setMyArmyPdfUrl("");
     setOppArmyPdfUrl("");
 
+    // ✅ reset feuille de score
+    setScoreSheetUrl("");
+
     setMyListText("");
     setOppListText("");
 
@@ -119,9 +131,18 @@ export default function Add40kForm() {
     }
 
     if (!isProbablyDriveUrl(myArmyPdfUrl) || !isProbablyDriveUrl(oppArmyPdfUrl)) {
-      alert("Liens Drive invalides. Mets un lien Google Drive (drive.google.com) ou laisse vide.");
+      alert(
+        "Liens Drive invalides. Mets un lien Google Drive (drive.google.com) ou laisse vide."
+      );
       return;
     }
+
+    // ✅ validation feuille de score (Drive)
+    if (!isProbablyDriveUrl(scoreSheetUrl)) {
+      alert("Lien de feuille de score invalide. Mets un lien Google Drive ou laisse vide.");
+      return;
+    }
+
     for (const u of photoUrls) {
       if (!isProbablyDriveUrl(u)) {
         alert("Un des liens photo n’est pas un lien Google Drive. Corrige-le ou supprime-le.");
@@ -162,6 +183,9 @@ export default function Add40kForm() {
           myArmyPdfUrl: myArmyPdfUrl.trim() || null,
           oppArmyPdfUrl: oppArmyPdfUrl.trim() || null,
 
+          // ✅ feuille de score (Drive)
+          scoreSheetUrl: scoreSheetUrl.trim() || null,
+
           // texte enrichi (optionnels)
           myListText: myListText.trim() || null,
           oppListText: oppListText.trim() || null,
@@ -179,34 +203,30 @@ export default function Add40kForm() {
         }),
       });
 
-     if (!res.ok) {
-  let msg = `Erreur serveur (${res.status})`;
+      if (!res.ok) {
+        let msg = `Erreur serveur (${res.status})`;
 
-  try {
-    // 1️⃣ On tente JSON (API Next / Prisma renvoient souvent { error })
-    const data = await res.json();
-    if (typeof data === "string") {
-      msg += `\n\n${data}`;
-    } else if (data?.error) {
-      msg += `\n\n${data.error}`;
-    } else {
-      msg += `\n\n${JSON.stringify(data, null, 2)}`;
-    }
-  } catch {
-    try {
-      // 2️⃣ Sinon texte brut
-      const text = await res.text();
-      if (text) msg += `\n\n${text}`;
-    } catch {
-      // 3️⃣ Rien à lire → message par défaut
-      msg += `\n\nUne erreur inconnue est survenue.`;
-    }
-  }
+        try {
+          const data = await res.json();
+          if (typeof data === "string") {
+            msg += `\n\n${data}`;
+          } else if (data?.error) {
+            msg += `\n\n${data.error}`;
+          } else {
+            msg += `\n\n${JSON.stringify(data, null, 2)}`;
+          }
+        } catch {
+          try {
+            const text = await res.text();
+            if (text) msg += `\n\n${text}`;
+          } catch {
+            msg += `\n\nUne erreur inconnue est survenue.`;
+          }
+        }
 
-  alert(msg);
-  return;
-}
-
+        alert(msg);
+        return;
+      }
 
       alert("Partie 40k enregistrée ✅");
       router.push("/40k/games");
@@ -457,7 +477,9 @@ export default function Add40kForm() {
                   </label>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">Détachement (optionnel)</span>
+                    <span className="text-sm font-semibold text-white/80">
+                      Détachement (optionnel)
+                    </span>
                     <input
                       className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       value={oppDetachment}
@@ -521,7 +543,9 @@ export default function Add40kForm() {
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">Score final — adversaire</span>
+                  <span className="text-sm font-semibold text-white/80">
+                    Score final — adversaire
+                  </span>
                   <input
                     type="number"
                     className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
@@ -545,6 +569,36 @@ export default function Add40kForm() {
                   </div>
                 </div>
               </div>
+            </section>
+
+            {/* ✅ SECTION 4bis — Feuille de score */}
+            <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
+              <div className="text-xs tracking-[0.35em] text-white/35">FEUILLE DE SCORE (DRIVE)</div>
+              <div className="mt-2 text-xs text-white/45">
+                Lien Google Drive vers un PDF ou une photo de la feuille finale (optionnel).
+              </div>
+
+              <label className="mt-4 block space-y-2">
+                <span className="text-sm font-semibold text-white/80">Lien feuille de score</span>
+                <input
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  value={scoreSheetUrl}
+                  onChange={(e) => setScoreSheetUrl(e.target.value)}
+                  placeholder="https://drive.google.com/file/d/..."
+                />
+                {scoreSheetUrl.trim() ? (
+                  <a
+                    className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                    href={scoreSheetUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    🧾 Ouvrir la feuille de score
+                  </a>
+                ) : (
+                  <span className="block text-[11px] text-white/45">Optionnel</span>
+                )}
+              </label>
             </section>
 
             {/* SECTION 5 — Notes */}
@@ -584,9 +638,7 @@ export default function Add40kForm() {
               </label>
 
               {!!photoUrls.length && (
-                <div className="mt-3 text-xs text-white/55">
-                  {photoUrls.length} lien(s) détecté(s)
-                </div>
+                <div className="mt-3 text-xs text-white/55">{photoUrls.length} lien(s) détecté(s)</div>
               )}
             </section>
 
