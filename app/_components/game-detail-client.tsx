@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import type { GameDTO } from "../types";
 
@@ -39,20 +40,24 @@ function Field({
 }: {
   label: string;
   value: string;
-  right?: React.ReactNode;
+  right?: ReactNode;
 }) {
   return (
     <div className="flex items-start justify-between gap-3 rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm">
       <div className="min-w-0">
-        <div className="text-[10px] tracking-[0.35em] text-white/35">{label}</div>
-        <div className="mt-1 text-sm font-semibold text-white/90 break-words">{value}</div>
+        <div className="text-[10px] tracking-[0.35em] text-white/35">
+          {label}
+        </div>
+        <div className="mt-1 text-sm font-semibold text-white/90 break-words">
+          {value}
+        </div>
       </div>
       {right ? <div className="shrink-0">{right}</div> : null}
     </div>
   );
 }
 
-function Pill({ children }: { children: React.ReactNode }) {
+function Pill({ children }: { children: ReactNode }) {
   return (
     <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/80 ring-1 ring-white/10">
       {children}
@@ -60,18 +65,91 @@ function Pill({ children }: { children: React.ReactNode }) {
   );
 }
 
-function linkPill(href: string, label: string, icon: string) {
+function openExternal(url: string) {
+  const u = (url ?? "").trim();
+  if (!u) return;
+  window.open(u, "_blank", "noopener,noreferrer");
+}
+
+/**
+ * ✅ Bouton "Ouvrir" mobile-first (portrait OK)
+ * - Mobile: bloc en colonne + bouton w-full
+ * - Desktop: texte à gauche + bouton à droite
+ */
+function DriveAction({
+  label,
+  href,
+  icon,
+  kind = "GOOGLE DRIVE",
+  hint,
+}: {
+  label: string;
+  href: string;
+  icon?: string;
+  kind?: string;
+  hint?: string;
+}) {
+  const url = (href ?? "").trim();
+  if (!url) {
+    return (
+      <div className="rounded-xl border border-white/10 bg-black/40 p-3">
+        <div className="text-xs text-white/45">{label}</div>
+        <div className="mt-1 text-xs text-white/45">Aucun lien</div>
+      </div>
+    );
+  }
+
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/85 hover:bg-white/10 transition"
+    <div
+      className="
+        grid grid-cols-1 gap-2
+        sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center
+        rounded-xl border border-white/10 bg-black/40
+        p-3
+      "
     >
-      <span>{icon}</span>
-      <span className="underline decoration-white/25 underline-offset-4">{label}</span>
-      <span className="text-white/35">→</span>
-    </a>
+      <div className="min-w-0">
+        <div className="text-[10px] tracking-[0.35em] text-white/35">{kind}</div>
+        <div className="mt-1 min-w-0 truncate text-sm text-white/85" title={url}>
+          <span className="mr-2">{icon ?? "🔗"}</span>
+          <span className="font-semibold text-white/90">{label}</span>
+        </div>
+        {hint ? <div className="mt-1 text-xs text-white/40">{hint}</div> : null}
+      </div>
+
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openExternal(url);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            openExternal(url);
+          }
+        }}
+        className="
+          w-full sm:w-auto
+          cursor-pointer select-none
+          rounded-lg
+          border border-amber-200/20
+          bg-amber-500/15
+          px-3 py-2
+          text-center text-xs font-semibold text-amber-100
+          hover:bg-amber-500/20
+          ring-1 ring-white/10
+          focus:outline-none focus:ring-2 focus:ring-amber-200/25
+          whitespace-nowrap
+        "
+        title="Ouvrir dans un nouvel onglet"
+      >
+        Ouvrir →
+      </div>
+    </div>
   );
 }
 
@@ -83,7 +161,10 @@ function isDirectImageUrl(url: string) {
 function isProbablyDriveUrl(url: string) {
   const u = (url ?? "").trim().toLowerCase();
   if (!u) return true;
-  return u.startsWith("https://drive.google.com/") || u.startsWith("https://docs.google.com/");
+  return (
+    u.startsWith("https://drive.google.com/") ||
+    u.startsWith("https://docs.google.com/")
+  );
 }
 
 export default function GameDetailClient({ game }: { game: GameDTO }) {
@@ -121,7 +202,6 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
       ? ` vs ${game.opponent}`
       : "");
 
-  // ✅ on sauvegarde notes + scoreSheetUrl ensemble (simple, robuste)
   async function saveGameEdits() {
     if (!isProbablyDriveUrl(scoreSheetUrl)) {
       setMsg("❌ Lien Drive invalide pour la feuille de score.");
@@ -175,12 +255,13 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
       </div>
 
       <div className="relative mx-auto max-w-5xl px-4 py-6">
-        {/* Carte principale */}
         <div className="rounded-[28px] border border-white/10 bg-black/55 p-6 sm:p-8 shadow-[0_30px_120px_rgba(0,0,0,0.85)] backdrop-blur-md space-y-6">
           {/* Header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <div className="text-[10px] tracking-[0.45em] text-white/40">WARTRACKER • 40K</div>
+              <div className="text-[10px] tracking-[0.45em] text-white/40">
+                WARTRACKER • 40K
+              </div>
 
               <h1 className="mt-2 truncate text-2xl sm:text-3xl font-extrabold tracking-[0.03em] text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.85)]">
                 {titleLeft}
@@ -188,10 +269,16 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
 
               <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/75">
                 <span className="text-white/50">Jouée le {dateStr}</span>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass(game.result)}`}>
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass(
+                    game.result
+                  )}`}
+                >
                   {resultLabel(game.result)}
                 </span>
-                {typeof game.points === "number" ? <Pill>{game.points} pts</Pill> : null}
+                {typeof game.points === "number" ? (
+                  <Pill>{game.points} pts</Pill>
+                ) : null}
                 {scoreLine ? <Pill>Score {scoreLine}</Pill> : null}
               </div>
 
@@ -205,14 +292,15 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
               <div className="mt-4 h-px w-56 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
             </div>
 
-            {/* Petit cartouche "log" */}
             <div className="hidden sm:block rounded-2xl border border-white/10 bg-black/45 px-4 py-3 text-xs text-white/55">
               <div className="tracking-[0.35em] text-white/35">GAME LOG</div>
               <div className="mt-2">
                 ID <span className="text-white/70">{game.id}</span>
               </div>
               {hasDirty ? (
-                <div className="mt-2 text-[11px] text-amber-200/70">Modifs non sauvegardées</div>
+                <div className="mt-2 text-[11px] text-amber-200/70">
+                  Modifs non sauvegardées
+                </div>
               ) : null}
             </div>
           </div>
@@ -229,80 +317,111 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
               label="SCORE / RÉSULTAT"
               value={scoreLine ?? "—"}
               right={
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass(game.result)}`}>
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeClass(
+                    game.result
+                  )}`}
+                >
                   {resultLabel(game.result)}
                 </span>
               }
             />
 
             <div className="rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm space-y-2">
-              <div className="text-[10px] tracking-[0.35em] text-white/35">TOI</div>
+              <div className="text-[10px] tracking-[0.35em] text-white/35">
+                TOI
+              </div>
               <div className="text-sm text-white/85">
                 <span className="text-white/45">Faction:</span>{" "}
-                <span className="font-semibold text-white/95">{game.myFaction ?? "—"}</span>
+                <span className="font-semibold text-white/95">
+                  {game.myFaction ?? "—"}
+                </span>
               </div>
               <div className="text-sm text-white/85">
                 <span className="text-white/45">Détachement:</span>{" "}
-                <span className="font-semibold text-white/95">{game.myDetachment ?? "—"}</span>
+                <span className="font-semibold text-white/95">
+                  {game.myDetachment ?? "—"}
+                </span>
               </div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm space-y-2">
-              <div className="text-[10px] tracking-[0.35em] text-white/35">ADVERSAIRE</div>
+              <div className="text-[10px] tracking-[0.35em] text-white/35">
+                ADVERSAIRE
+              </div>
               <div className="text-sm text-white/85">
                 <span className="text-white/45">Faction:</span>{" "}
-                <span className="font-semibold text-white/95">{game.oppFaction ?? "—"}</span>
+                <span className="font-semibold text-white/95">
+                  {game.oppFaction ?? "—"}
+                </span>
               </div>
               <div className="text-sm text-white/85">
                 <span className="text-white/45">Détachement:</span>{" "}
-                <span className="font-semibold text-white/95">{game.oppDetachment ?? "—"}</span>
+                <span className="font-semibold text-white/95">
+                  {game.oppDetachment ?? "—"}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* PDFs + texte enrichi */}
+          {/* ✅ Listes d’armée — DriveAction (mobile portrait OK) */}
           <section className="rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-semibold text-white/85">Listes d’armée</div>
-              <div className="text-[10px] tracking-[0.35em] text-white/35">DRIVE • PDF</div>
+              <div className="text-sm font-semibold text-white/85">
+                Listes d’armée
+              </div>
+              <div className="text-[10px] tracking-[0.35em] text-white/35">
+                DRIVE • PDF
+              </div>
             </div>
 
             <div className="grid gap-2 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/10 bg-black/40 p-3">
-                <div className="text-xs text-white/45 mb-2">Toi</div>
-                {game.myArmyPdfUrl ? linkPill(game.myArmyPdfUrl, "Ouvrir le PDF (toi)", "📄") : (
-                  <div className="text-xs text-white/45">Aucun PDF</div>
-                )}
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-black/40 p-3">
-                <div className="text-xs text-white/45 mb-2">Adversaire</div>
-                {game.oppArmyPdfUrl ? linkPill(game.oppArmyPdfUrl, "Ouvrir le PDF (adversaire)", "📄") : (
-                  <div className="text-xs text-white/45">Aucun PDF</div>
-                )}
-              </div>
+              <DriveAction
+                label="PDF (toi)"
+                href={game.myArmyPdfUrl ?? ""}
+                icon="📄"
+                kind="ARMY LIST"
+              />
+              <DriveAction
+                label="PDF (adversaire)"
+                href={game.oppArmyPdfUrl ?? ""}
+                icon="📄"
+                kind="ARMY LIST"
+              />
             </div>
 
             {game.myListText ? (
               <div className="pt-2">
-                <div className="text-[10px] tracking-[0.35em] text-white/35">TEXTE ENRICHI • TOI</div>
-                <div className="mt-2 whitespace-pre-wrap text-sm text-white/85">{game.myListText}</div>
+                <div className="text-[10px] tracking-[0.35em] text-white/35">
+                  TEXTE ENRICHI • TOI
+                </div>
+                <div className="mt-2 whitespace-pre-wrap text-sm text-white/85">
+                  {game.myListText}
+                </div>
               </div>
             ) : null}
 
             {game.oppListText ? (
               <div className="pt-2">
-                <div className="text-[10px] tracking-[0.35em] text-white/35">TEXTE ENRICHI • ADVERSAIRE</div>
-                <div className="mt-2 whitespace-pre-wrap text-sm text-white/85">{game.oppListText}</div>
+                <div className="text-[10px] tracking-[0.35em] text-white/35">
+                  TEXTE ENRICHI • ADVERSAIRE
+                </div>
+                <div className="mt-2 whitespace-pre-wrap text-sm text-white/85">
+                  {game.oppListText}
+                </div>
               </div>
             ) : null}
           </section>
 
-          {/* ✅ Feuille de score (Drive) */}
+          {/* ✅ Feuille de score — DriveAction (mobile portrait OK) */}
           <section className="rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-semibold text-white/85">Feuille de score</div>
-              <div className="text-[10px] tracking-[0.35em] text-white/35">DRIVE • PDF/PHOTO</div>
+              <div className="text-sm font-semibold text-white/85">
+                Feuille de score
+              </div>
+              <div className="text-[10px] tracking-[0.35em] text-white/35">
+                DRIVE • PDF/PHOTO
+              </div>
             </div>
 
             <input
@@ -312,23 +431,24 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
               placeholder="https://drive.google.com/file/d/..."
             />
 
-            {scoreSheetUrl.trim() ? (
-              <div className="flex flex-wrap items-center gap-2">
-                {linkPill(scoreSheetUrl, "Ouvrir la feuille de score", "🧾")}
-                <span className="text-xs text-white/40">
-                  Astuce : partage “Toute personne ayant le lien” (lecture).
-                </span>
-              </div>
-            ) : (
-              <div className="text-xs text-white/45">Aucune feuille de score.</div>
-            )}
+            <DriveAction
+              label="Ouvrir la feuille de score"
+              href={scoreSheetUrl}
+              icon="🧾"
+              kind="SCORE SHEET"
+              hint="Astuce : partage “Toute personne ayant le lien” (lecture)."
+            />
           </section>
 
           {/* Notes (persist + sauvegarde) */}
           <section className="rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-semibold text-white/85">Notes post-partie</div>
-              <div className="text-[10px] tracking-[0.35em] text-white/35">PERSISTENT</div>
+              <div className="text-sm font-semibold text-white/85">
+                Notes post-partie
+              </div>
+              <div className="text-[10px] tracking-[0.35em] text-white/35">
+                PERSISTENT
+              </div>
             </div>
 
             <textarea
@@ -355,54 +475,60 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
                   disabled:opacity-50
                 "
               >
-                {saving ? "Sauvegarde..." : hasDirty ? "Sauvegarder les modifs" : "Sauvegarder"}
+                {saving
+                  ? "Sauvegarde..."
+                  : hasDirty
+                  ? "Sauvegarder les modifs"
+                  : "Sauvegarder"}
               </button>
 
               {msg ? (
                 <span className="text-xs text-white/70">{msg}</span>
               ) : hasDirty ? (
-                <span className="text-xs text-amber-200/60">Des changements sont en attente.</span>
+                <span className="text-xs text-amber-200/60">
+                  Des changements sont en attente.
+                </span>
               ) : (
-                <span className="text-xs text-white/35">Modifie puis sauvegarde pour persister.</span>
+                <span className="text-xs text-white/35">
+                  Modifie puis sauvegarde pour persister.
+                </span>
               )}
             </div>
           </section>
 
-          {/* Photos */}
+          {/* Photos — DriveAction (mobile portrait OK) */}
           <section className="rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-semibold text-white/85">Photos (Drive)</div>
-              <div className="text-[10px] tracking-[0.35em] text-white/35">MEDIA</div>
+              <div className="text-sm font-semibold text-white/85">
+                Photos (Drive)
+              </div>
+              <div className="text-[10px] tracking-[0.35em] text-white/35">
+                MEDIA
+              </div>
             </div>
 
             {game.photoUrls && game.photoUrls.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 {game.photoUrls.map((u, i) => (
-                  <div key={`${u}-${i}`} className="rounded-xl border border-white/10 bg-black/40 p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-xs text-white/45">Photo {i + 1}</div>
-                        <div className="truncate text-sm text-white/80">{u}</div>
-                      </div>
-
-                      <a
-                        href={u}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80 hover:bg-white/10 transition"
-                      >
-                        Ouvrir →
-                      </a>
-                    </div>
+                  <div
+                    key={`${u}-${i}`}
+                    className="rounded-xl border border-white/10 bg-black/40 p-3 space-y-2"
+                  >
+                    <DriveAction
+                      label={`Photo ${i + 1}`}
+                      href={u}
+                      icon="🖼️"
+                      kind="PHOTO"
+                    />
 
                     {isDirectImageUrl(u) ? (
                       <img
                         src={u}
                         alt={`Photo ${i + 1}`}
-                        className="mt-3 h-44 w-full rounded-lg object-cover border border-white/10"
+                        className="h-44 w-full rounded-lg object-cover border border-white/10"
                       />
                     ) : (
-                      <div className="mt-2 text-xs text-white/45">
+                      <div className="text-xs text-white/45">
                         Preview désactivé (Drive). Clique “Ouvrir”.
                       </div>
                     )}
@@ -410,12 +536,16 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
                 ))}
               </div>
             ) : (
-              <div className="text-xs text-white/45">📷 Pas de photos renseignées.</div>
+              <div className="text-xs text-white/45">
+                📷 Pas de photos renseignées.
+              </div>
             )}
           </section>
 
           <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          <div className="text-center text-xs text-white/35">The Long War is logged.</div>
+          <div className="text-center text-xs text-white/35">
+            The Long War is logged.
+          </div>
         </div>
       </div>
     </main>

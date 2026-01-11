@@ -28,6 +28,15 @@ export default async function GameDetailPage({
 
   const g: any = game;
 
+  // ✅ Normalisation des URLs Drive (si tu as encore d'anciens champs, tu peux les fallback ici)
+  const myPdfUrl: string | null = g.myArmyPdfUrl ?? null;
+  const oppPdfUrl: string | null = g.oppArmyPdfUrl ?? null;
+  const scoreSheetUrl: string | null = g.scoreSheetUrl ?? null;
+
+  // (optionnel) si un jour tu ajoutes un champ dossier drive pour photos
+  const photosDriveUrl: string | null =
+    typeof g.photosDriveUrl === "string" ? g.photosDriveUrl : null;
+
   const safeGame: GameDTO = {
     id: game.id,
     createdAt: game.createdAt.toISOString(),
@@ -44,16 +53,16 @@ export default async function GameDetailPage({
 
     myFaction: g.myFaction ?? null,
     myDetachment: g.myDetachment ?? null,
-    myArmyPdfUrl: g.myArmyPdfUrl ?? null,
+    myArmyPdfUrl: myPdfUrl,
     myListText: g.myListText ?? null,
 
     oppFaction: g.oppFaction ?? null,
     oppDetachment: g.oppDetachment ?? null,
-    oppArmyPdfUrl: g.oppArmyPdfUrl ?? null,
+    oppArmyPdfUrl: oppPdfUrl,
     oppListText: g.oppListText ?? null,
 
     // ✅ Feuille de score (Drive) — PDF ou photo
-    scoreSheetUrl: g.scoreSheetUrl ?? null,
+    scoreSheetUrl,
 
     myScore: g.myScore ?? null,
     oppScore: g.oppScore ?? null,
@@ -61,6 +70,10 @@ export default async function GameDetailPage({
 
     notes: g.notes ?? null,
     photoUrls: Array.isArray(g.photoUrls) ? g.photoUrls : [],
+
+    // ✅ (optionnel) si ton type GameDTO l'autorise.
+    // Si GameDTO ne contient pas ce champ, supprime ces 2 lignes.
+    ...(photosDriveUrl ? ({ photosDriveUrl } as any) : {}),
   };
 
   return (
