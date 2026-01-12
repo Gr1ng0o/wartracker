@@ -24,13 +24,6 @@ function isProbablyDriveUrl(url: string) {
   );
 }
 
-function normalizeUrlList(raw: string) {
-  return raw
-    .split("\n")
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
-
 export default function Add40kForm() {
   const router = useRouter();
 
@@ -83,10 +76,21 @@ export default function Add40kForm() {
   // 5) Notes (unique champ)
   const [notes, setNotes] = useState("");
 
-  // 6) Médias Drive (optionnels)
-  const [photoLinksRaw, setPhotoLinksRaw] = useState("");
+  // 6) ✅ Photos par tour (Drive) — 1 lien par champ
+  const [deploymentPhotoUrl, setDeploymentPhotoUrl] = useState("");
+  const [t1PhotoUrl, setT1PhotoUrl] = useState("");
+  const [t2PhotoUrl, setT2PhotoUrl] = useState("");
+  const [t3PhotoUrl, setT3PhotoUrl] = useState("");
+  const [t4PhotoUrl, setT4PhotoUrl] = useState("");
+  const [t5PhotoUrl, setT5PhotoUrl] = useState("");
 
-  const photoUrls = useMemo(() => normalizeUrlList(photoLinksRaw), [photoLinksRaw]);
+  // ✅ Notes par tour (timeline)
+  const [deploymentNotes, setDeploymentNotes] = useState("");
+  const [t1Notes, setT1Notes] = useState("");
+  const [t2Notes, setT2Notes] = useState("");
+  const [t3Notes, setT3Notes] = useState("");
+  const [t4Notes, setT4Notes] = useState("");
+  const [t5Notes, setT5Notes] = useState("");
 
   const [saving, setSaving] = useState(false);
 
@@ -118,7 +122,22 @@ export default function Add40kForm() {
     setOppScore(0);
 
     setNotes("");
-    setPhotoLinksRaw("");
+
+    // ✅ reset photos par tour
+    setDeploymentPhotoUrl("");
+    setT1PhotoUrl("");
+    setT2PhotoUrl("");
+    setT3PhotoUrl("");
+    setT4PhotoUrl("");
+    setT5PhotoUrl("");
+
+    // ✅ reset notes par tour
+    setDeploymentNotes("");
+    setT1Notes("");
+    setT2Notes("");
+    setT3Notes("");
+    setT4Notes("");
+    setT5Notes("");
   }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -139,13 +158,27 @@ export default function Add40kForm() {
 
     // ✅ validation feuille de score (Drive)
     if (!isProbablyDriveUrl(scoreSheetUrl)) {
-      alert("Lien de feuille de score invalide. Mets un lien Google Drive ou laisse vide.");
+      alert(
+        "Lien de feuille de score invalide. Mets un lien Google Drive ou laisse vide."
+      );
       return;
     }
 
-    for (const u of photoUrls) {
+    // ✅ validation photos par tour (Drive)
+    const turnUrls = [
+      deploymentPhotoUrl,
+      t1PhotoUrl,
+      t2PhotoUrl,
+      t3PhotoUrl,
+      t4PhotoUrl,
+      t5PhotoUrl,
+    ];
+
+    for (const u of turnUrls) {
       if (!isProbablyDriveUrl(u)) {
-        alert("Un des liens photo n’est pas un lien Google Drive. Corrige-le ou supprime-le.");
+        alert(
+          "Un des liens (Déploiement / T1–T5) n’est pas un lien Google Drive. Corrige-le ou laisse vide."
+        );
         return;
       }
     }
@@ -198,8 +231,21 @@ export default function Add40kForm() {
           // notes
           notes,
 
-          // photos
-          photoUrls,
+          // ✅ photos par tour (Drive)
+          deploymentPhotoUrl: deploymentPhotoUrl.trim() || null,
+          t1PhotoUrl: t1PhotoUrl.trim() || null,
+          t2PhotoUrl: t2PhotoUrl.trim() || null,
+          t3PhotoUrl: t3PhotoUrl.trim() || null,
+          t4PhotoUrl: t4PhotoUrl.trim() || null,
+          t5PhotoUrl: t5PhotoUrl.trim() || null,
+
+          // ✅ notes par tour
+          deploymentNotes: deploymentNotes.trim() || null,
+          t1Notes: t1Notes.trim() || null,
+          t2Notes: t2Notes.trim() || null,
+          t3Notes: t3Notes.trim() || null,
+          t4Notes: t4Notes.trim() || null,
+          t5Notes: t5Notes.trim() || null,
         }),
       });
 
@@ -298,11 +344,15 @@ export default function Add40kForm() {
           <form onSubmit={onSubmit} className="mt-8 space-y-7">
             {/* SECTION 1 — Identification */}
             <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="text-xs tracking-[0.35em] text-white/35">IDENTIFICATION</div>
+              <div className="text-xs tracking-[0.35em] text-white/35">
+                IDENTIFICATION
+              </div>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">Date</span>
+                  <span className="text-sm font-semibold text-white/80">
+                    Date
+                  </span>
                   <input
                     type="datetime-local"
                     value={playedAtLocal}
@@ -312,10 +362,14 @@ export default function Add40kForm() {
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">Format (points)</span>
+                  <span className="text-sm font-semibold text-white/80">
+                    Format (points)
+                  </span>
                   <select
                     value={points}
-                    onChange={(e) => setPoints(Number(e.target.value) as 1000 | 1500 | 2000)}
+                    onChange={(e) =>
+                      setPoints(Number(e.target.value) as 1000 | 1500 | 2000)
+                    }
                     className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   >
                     <option value={1000}>1000</option>
@@ -342,7 +396,9 @@ export default function Add40kForm() {
             {/* SECTION 2 — Mission & table */}
             <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
               <div className="flex items-center justify-between gap-3">
-                <div className="text-xs tracking-[0.35em] text-white/35">MISSION & TABLE</div>
+                <div className="text-xs tracking-[0.35em] text-white/35">
+                  MISSION & TABLE
+                </div>
                 <div className="text-[11px] text-white/40">
                   Référence : Leviathan – Take and Hold – Hammer and Anvil – GW Layout 4
                 </div>
@@ -350,7 +406,9 @@ export default function Add40kForm() {
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">Pack de mission</span>
+                  <span className="text-sm font-semibold text-white/80">
+                    Pack de mission
+                  </span>
                   <input
                     className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                     value={missionPack}
@@ -360,7 +418,9 @@ export default function Add40kForm() {
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">Mission primaire</span>
+                  <span className="text-sm font-semibold text-white/80">
+                    Mission primaire
+                  </span>
                   <input
                     className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                     value={primaryMission}
@@ -370,7 +430,9 @@ export default function Add40kForm() {
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">Déploiement</span>
+                  <span className="text-sm font-semibold text-white/80">
+                    Déploiement
+                  </span>
                   <input
                     className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                     value={deployment}
@@ -380,7 +442,9 @@ export default function Add40kForm() {
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">Layout terrain</span>
+                  <span className="text-sm font-semibold text-white/80">
+                    Layout terrain
+                  </span>
                   <input
                     className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                     value={terrainLayout}
@@ -393,7 +457,9 @@ export default function Add40kForm() {
 
             {/* SECTION 3 — Armées */}
             <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="text-xs tracking-[0.35em] text-white/35">ARMÉES</div>
+              <div className="text-xs tracking-[0.35em] text-white/35">
+                ARMÉES
+              </div>
               <div className="mt-2 text-xs text-white/45">
                 Le PDF (Drive) fait foi si présent. Le texte est un enrichissement.
               </div>
@@ -401,10 +467,14 @@ export default function Add40kForm() {
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {/* Toi */}
                 <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-                  <div className="text-xs tracking-[0.25em] text-white/35">TOI</div>
+                  <div className="text-xs tracking-[0.25em] text-white/35">
+                    TOI
+                  </div>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">Faction</span>
+                    <span className="text-sm font-semibold text-white/80">
+                      Faction
+                    </span>
                     <input
                       className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       value={myFaction}
@@ -414,7 +484,9 @@ export default function Add40kForm() {
                   </label>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">Détachement</span>
+                    <span className="text-sm font-semibold text-white/80">
+                      Détachement
+                    </span>
                     <input
                       className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       value={myDetachment}
@@ -424,7 +496,9 @@ export default function Add40kForm() {
                   </label>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">PDF liste (Drive)</span>
+                    <span className="text-sm font-semibold text-white/80">
+                      PDF liste (Drive)
+                    </span>
                     <input
                       className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       value={myArmyPdfUrl}
@@ -444,7 +518,9 @@ export default function Add40kForm() {
                         📄 Ouvrir le PDF
                       </a>
                     ) : (
-                      <span className="block text-[11px] text-white/45">Optionnel</span>
+                      <span className="block text-[11px] text-white/45">
+                        Optionnel
+                      </span>
                     )}
                   </label>
 
@@ -464,10 +540,14 @@ export default function Add40kForm() {
 
                 {/* Adversaire */}
                 <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-                  <div className="text-xs tracking-[0.25em] text-white/35">ADVERSAIRE</div>
+                  <div className="text-xs tracking-[0.25em] text-white/35">
+                    ADVERSAIRE
+                  </div>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">Faction</span>
+                    <span className="text-sm font-semibold text-white/80">
+                      Faction
+                    </span>
                     <input
                       className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       value={oppFaction}
@@ -489,7 +569,9 @@ export default function Add40kForm() {
                   </label>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">PDF liste (Drive)</span>
+                    <span className="text-sm font-semibold text-white/80">
+                      PDF liste (Drive)
+                    </span>
                     <input
                       className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       value={oppArmyPdfUrl}
@@ -506,7 +588,9 @@ export default function Add40kForm() {
                         📄 Ouvrir le PDF
                       </a>
                     ) : (
-                      <span className="block text-[11px] text-white/45">Optionnel</span>
+                      <span className="block text-[11px] text-white/45">
+                        Optionnel
+                      </span>
                     )}
                   </label>
 
@@ -528,11 +612,15 @@ export default function Add40kForm() {
 
             {/* SECTION 4 — Score & résultat */}
             <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="text-xs tracking-[0.35em] text-white/35">SCORE & RÉSULTAT</div>
+              <div className="text-xs tracking-[0.35em] text-white/35">
+                SCORE & RÉSULTAT
+              </div>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">Score final — toi</span>
+                  <span className="text-sm font-semibold text-white/80">
+                    Score final — toi
+                  </span>
                   <input
                     type="number"
                     className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
@@ -556,7 +644,9 @@ export default function Add40kForm() {
                 </label>
 
                 <div className="rounded-xl border border-white/10 bg-black/50 p-4 sm:col-span-2">
-                  <div className="text-xs tracking-[0.25em] text-white/35">RÉSULTAT AUTO</div>
+                  <div className="text-xs tracking-[0.25em] text-white/35">
+                    RÉSULTAT AUTO
+                  </div>
                   <div className="mt-2 text-lg font-bold text-white">
                     {computedResult === "D"
                       ? "⚖️ Égalité"
@@ -571,15 +661,19 @@ export default function Add40kForm() {
               </div>
             </section>
 
-            {/* ✅ SECTION 4bis — Feuille de score */}
+            {/* SECTION 4bis — Feuille de score */}
             <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="text-xs tracking-[0.35em] text-white/35">FEUILLE DE SCORE (DRIVE)</div>
+              <div className="text-xs tracking-[0.35em] text-white/35">
+                FEUILLE DE SCORE (DRIVE)
+              </div>
               <div className="mt-2 text-xs text-white/45">
                 Lien Google Drive vers un PDF ou une photo de la feuille finale (optionnel).
               </div>
 
               <label className="mt-4 block space-y-2">
-                <span className="text-sm font-semibold text-white/80">Lien feuille de score</span>
+                <span className="text-sm font-semibold text-white/80">
+                  Lien feuille de score
+                </span>
                 <input
                   className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   value={scoreSheetUrl}
@@ -596,17 +690,23 @@ export default function Add40kForm() {
                     🧾 Ouvrir la feuille de score
                   </a>
                 ) : (
-                  <span className="block text-[11px] text-white/45">Optionnel</span>
+                  <span className="block text-[11px] text-white/45">
+                    Optionnel
+                  </span>
                 )}
               </label>
             </section>
 
             {/* SECTION 5 — Notes */}
             <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="text-xs tracking-[0.35em] text-white/35">NOTES / AMÉLIORATIONS</div>
+              <div className="text-xs tracking-[0.35em] text-white/35">
+                NOTES / AMÉLIORATIONS
+              </div>
 
               <label className="mt-4 block space-y-2">
-                <span className="text-sm font-semibold text-white/80">Notes post-partie</span>
+                <span className="text-sm font-semibold text-white/80">
+                  Notes post-partie
+                </span>
                 <textarea
                   className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   rows={5}
@@ -617,29 +717,256 @@ export default function Add40kForm() {
               </label>
             </section>
 
-            {/* SECTION 6 — Médias */}
+            {/* ✅ SECTION 6 — Timeline (photos + notes par tour) */}
             <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="text-xs tracking-[0.35em] text-white/35">MÉDIAS (DRIVE)</div>
+              <div className="text-xs tracking-[0.35em] text-white/35">
+                TIMELINE (TOUR PAR TOUR)
+              </div>
               <div className="mt-2 text-xs text-white/45">
-                Mets 1 lien par ligne (photos) ou un lien de dossier Drive partagé.
+                Ajoute un lien Drive (photo) et tes remarques/ajustements par tour. Tout est optionnel.
               </div>
 
-              <label className="mt-4 block space-y-2">
-                <span className="text-sm font-semibold text-white/80">
-                  Liens photos (Drive) — 1 par ligne
-                </span>
-                <textarea
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
-                  rows={4}
-                  value={photoLinksRaw}
-                  onChange={(e) => setPhotoLinksRaw(e.target.value)}
-                  placeholder={`https://drive.google.com/file/d/...\nhttps://drive.google.com/file/d/...`}
-                />
-              </label>
+              <div className="mt-5 space-y-5">
+                {/* Déploiement */}
+                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-white/35">DÉPLOIEMENT</div>
 
-              {!!photoUrls.length && (
-                <div className="mt-3 text-xs text-white/55">{photoUrls.length} lien(s) détecté(s)</div>
-              )}
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-sm font-semibold text-white/80">Photo (Drive)</span>
+                      <input
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        value={deploymentPhotoUrl}
+                        onChange={(e) => setDeploymentPhotoUrl(e.target.value)}
+                        placeholder="https://drive.google.com/file/d/..."
+                      />
+                      {deploymentPhotoUrl.trim() ? (
+                        <a
+                          className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                          href={deploymentPhotoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          📷 Ouvrir
+                        </a>
+                      ) : (
+                        <span className="block text-[11px] text-white/45">Optionnel</span>
+                      )}
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-sm font-semibold text-white/80">Remarques / ajustements</span>
+                      <textarea
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        rows={3}
+                        value={deploymentNotes}
+                        onChange={(e) => setDeploymentNotes(e.target.value)}
+                        placeholder="Plan de jeu, erreurs de déploiement, trade-offs..."
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* T1 */}
+                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-white/35">T1</div>
+
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-sm font-semibold text-white/80">Photo (Drive)</span>
+                      <input
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        value={t1PhotoUrl}
+                        onChange={(e) => setT1PhotoUrl(e.target.value)}
+                        placeholder="https://drive.google.com/file/d/..."
+                      />
+                      {t1PhotoUrl.trim() ? (
+                        <a
+                          className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                          href={t1PhotoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          📷 Ouvrir
+                        </a>
+                      ) : (
+                        <span className="block text-[11px] text-white/45">Optionnel</span>
+                      )}
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-sm font-semibold text-white/80">Remarques / ajustements</span>
+                      <textarea
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        rows={3}
+                        value={t1Notes}
+                        onChange={(e) => setT1Notes(e.target.value)}
+                        placeholder="Séquences clés, erreurs, timings..."
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* T2 */}
+                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-white/35">T2</div>
+
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-sm font-semibold text-white/80">Photo (Drive)</span>
+                      <input
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        value={t2PhotoUrl}
+                        onChange={(e) => setT2PhotoUrl(e.target.value)}
+                        placeholder="https://drive.google.com/file/d/..."
+                      />
+                      {t2PhotoUrl.trim() ? (
+                        <a
+                          className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                          href={t2PhotoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          📷 Ouvrir
+                        </a>
+                      ) : (
+                        <span className="block text-[11px] text-white/45">Optionnel</span>
+                      )}
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-sm font-semibold text-white/80">Remarques / ajustements</span>
+                      <textarea
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        rows={3}
+                        value={t2Notes}
+                        onChange={(e) => setT2Notes(e.target.value)}
+                        placeholder="Trades, scoring, priorités..."
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* T3 */}
+                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-white/35">T3</div>
+
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-sm font-semibold text-white/80">Photo (Drive)</span>
+                      <input
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        value={t3PhotoUrl}
+                        onChange={(e) => setT3PhotoUrl(e.target.value)}
+                        placeholder="https://drive.google.com/file/d/..."
+                      />
+                      {t3PhotoUrl.trim() ? (
+                        <a
+                          className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                          href={t3PhotoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          📷 Ouvrir
+                        </a>
+                      ) : (
+                        <span className="block text-[11px] text-white/45">Optionnel</span>
+                      )}
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-sm font-semibold text-white/80">Remarques / ajustements</span>
+                      <textarea
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        rows={3}
+                        value={t3Notes}
+                        onChange={(e) => setT3Notes(e.target.value)}
+                        placeholder="Tempo, deny, pivot..."
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* T4 */}
+                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-white/35">T4</div>
+
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-sm font-semibold text-white/80">Photo (Drive)</span>
+                      <input
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        value={t4PhotoUrl}
+                        onChange={(e) => setT4PhotoUrl(e.target.value)}
+                        placeholder="https://drive.google.com/file/d/..."
+                      />
+                      {t4PhotoUrl.trim() ? (
+                        <a
+                          className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                          href={t4PhotoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          📷 Ouvrir
+                        </a>
+                      ) : (
+                        <span className="block text-[11px] text-white/45">Optionnel</span>
+                      )}
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-sm font-semibold text-white/80">Remarques / ajustements</span>
+                      <textarea
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        rows={3}
+                        value={t4Notes}
+                        onChange={(e) => setT4Notes(e.target.value)}
+                        placeholder="Clutch plays, gestion ressources..."
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* T5 */}
+                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-white/35">T5</div>
+
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-sm font-semibold text-white/80">Photo (Drive)</span>
+                      <input
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        value={t5PhotoUrl}
+                        onChange={(e) => setT5PhotoUrl(e.target.value)}
+                        placeholder="https://drive.google.com/file/d/..."
+                      />
+                      {t5PhotoUrl.trim() ? (
+                        <a
+                          className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                          href={t5PhotoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          📷 Ouvrir
+                        </a>
+                      ) : (
+                        <span className="block text-[11px] text-white/45">Optionnel</span>
+                      )}
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-sm font-semibold text-white/80">Remarques / ajustements</span>
+                      <textarea
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        rows={3}
+                        value={t5Notes}
+                        onChange={(e) => setT5Notes(e.target.value)}
+                        placeholder="Fin de game, erreurs de closing..."
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
             </section>
 
             <button

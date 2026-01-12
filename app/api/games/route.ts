@@ -48,7 +48,10 @@ export async function POST(req: Request) {
     const build = parseNullableString(body.build) ?? "—";
     const opponent = parseNullableString(body.opponent);
     if (!opponent) {
-      return Response.json({ error: "Champs requis manquants: opponent" }, { status: 400 });
+      return Response.json(
+        { error: "Champs requis manquants: opponent" },
+        { status: 400 }
+      );
     }
 
     const first = typeof body.first === "boolean" ? body.first : true;
@@ -81,6 +84,14 @@ export async function POST(req: Request) {
 
     const photoUrls = parsePhotoUrls(body.photoUrls);
 
+    // ✅ NOUVEAUX: photos par tour (Drive)
+    const deploymentPhotoUrl = parseNullableString(body.deploymentPhotoUrl);
+    const t1PhotoUrl = parseNullableString(body.t1PhotoUrl);
+    const t2PhotoUrl = parseNullableString(body.t2PhotoUrl);
+    const t3PhotoUrl = parseNullableString(body.t3PhotoUrl);
+    const t4PhotoUrl = parseNullableString(body.t4PhotoUrl);
+    const t5PhotoUrl = parseNullableString(body.t5PhotoUrl);
+
     const game = await prisma.game.create({
       data: {
         gameType,
@@ -106,6 +117,14 @@ export async function POST(req: Request) {
         scoreSheetUrl: scoreSheetUrl ?? undefined,
 
         photoUrls,
+
+        // ✅ persist “déploiement + T1..T5”
+        deploymentPhotoUrl: deploymentPhotoUrl ?? undefined,
+        t1PhotoUrl: t1PhotoUrl ?? undefined,
+        t2PhotoUrl: t2PhotoUrl ?? undefined,
+        t3PhotoUrl: t3PhotoUrl ?? undefined,
+        t4PhotoUrl: t4PhotoUrl ?? undefined,
+        t5PhotoUrl: t5PhotoUrl ?? undefined,
       },
     });
 
@@ -113,7 +132,10 @@ export async function POST(req: Request) {
   } catch (e: any) {
     console.error("POST /api/games ERROR =", e);
     return Response.json(
-      { error: "Erreur serveur lors de l'enregistrement", details: e?.message ?? String(e) },
+      {
+        error: "Erreur serveur lors de l'enregistrement",
+        details: e?.message ?? String(e),
+      },
       { status: 500 }
     );
   }

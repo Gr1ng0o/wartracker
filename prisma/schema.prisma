@@ -38,9 +38,23 @@ model Game {
 
   // Photos diverses
   photoUrls      String[] @default([])
+  deploymentPhotoUrl String?
+t1PhotoUrl         String?
+t2PhotoUrl         String?
+t3PhotoUrl         String?
+t4PhotoUrl         String?
+t5PhotoUrl         String?
+deploymentNotes String?
+t1Notes         String?
+t2Notes         String?
+t3Notes         String?
+t4Notes         String?
+t5Notes         String?
+
 }
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
