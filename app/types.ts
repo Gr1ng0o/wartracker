@@ -1,19 +1,11 @@
 /**
  * 🔒 DTO SAFE partagé serveur / client
- * WarTracker — v1 (Warhammer 40k)
- *
- * - Médias : liens Google Drive (optionnels)
- * - Inputs rapides : date/opponent/points + mission line + factions + score + notes
- */
-
-/**
- * 🔒 DTO SAFE partagé serveur / client
  * Compatible v1 (WarTracker 40k) + legacy (routes /games)
  */
 export type GameDTO = {
   id: string;
   createdAt: string; // fallback / audit
-  gameType: string;  // "40k" | "FaB" etc.
+  gameType: string; // "40k" | "FaB" etc.
 
   /* =========================
    * LEGACY (à garder pour build)
@@ -26,7 +18,7 @@ export type GameDTO = {
   tag2?: string | null;
 
   // anciens noms PDF (encore référencés dans du code legacy)
-  armyListPdfUrl?: string | null;  // = myArmyPdfUrl
+  armyListPdfUrl?: string | null; // = myArmyPdfUrl
   armyListPdfUrl2?: string | null; // = oppArmyPdfUrl
 
   /* =========================
@@ -68,4 +60,24 @@ export type GameDTO = {
 
   // 6) Médias (Drive)
   photoUrls?: string[];
+
+  /* =========================
+   * V1 – Timeline (tour par tour)
+   * ========================= */
+
+  // Photos (Drive)
+  deploymentPhotoUrl?: string | null;
+  t1PhotoUrl?: string | null;
+  t2PhotoUrl?: string | null;
+  t3PhotoUrl?: string | null;
+  t4PhotoUrl?: string | null;
+  t5PhotoUrl?: string | null;
+
+  // Notes (éditables)
+  deploymentNotes?: string | null;
+  t1Notes?: string | null;
+  t2Notes?: string | null;
+  t3Notes?: string | null;
+  t4Notes?: string | null;
+  t5Notes?: string | null;
 };

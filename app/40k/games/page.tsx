@@ -9,8 +9,38 @@ import type { GameDTO } from "../types";
 export default async function Page40kGames() {
   const games = await prisma.game.findMany({
     where: { gameType: "40k" },
-    // ✅ playedAt n'existe pas dans Prisma -> on trie sur createdAt côté DB
     orderBy: { createdAt: "desc" },
+    // ✅ IMPORTANT : on SELECT seulement des colonnes qui existent déjà en DB
+    // (sinon Prisma plante: "Game.deploymentPhotoUrl does not exist")
+    select: {
+      id: true,
+      createdAt: true,
+      gameType: true,
+
+      // champs "legacy" / communs
+      build: true,
+      opponent: true,
+      first: true,
+      result: true,
+      score: true,
+      tag1: true,
+      tag2: true,
+      notes: true,
+
+      // 40k existants
+      myFaction: true,
+      myDetachment: true,
+      oppFaction: true,
+      oppDetachment: true,
+      myScore: true,
+      oppScore: true,
+
+      // uploads existants
+      myArmyPdfUrl: true,
+      oppArmyPdfUrl: true,
+      scoreSheetUrl: true,
+      photoUrls: true,
+    },
   });
 
   const safeGames: GameDTO[] = games.map((game) => {
@@ -21,14 +51,16 @@ export default async function Page40kGames() {
       createdAt: game.createdAt.toISOString(),
       gameType: game.gameType,
 
+      // ⚠️ ces champs ne sont pas dans ton schema Prisma actuel => on garde la compat front
       playedAt: g.playedAt ? new Date(g.playedAt).toISOString() : null,
-      opponent: g.opponent ?? null,
       points: typeof g.points === "number" ? g.points : null,
 
       missionPack: g.missionPack ?? null,
       primaryMission: g.primaryMission ?? null,
       deployment: g.deployment ?? null,
       terrainLayout: g.terrainLayout ?? null,
+
+      opponent: g.opponent ?? null,
 
       myFaction: g.myFaction ?? null,
       myDetachment: g.myDetachment ?? null,

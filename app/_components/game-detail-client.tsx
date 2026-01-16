@@ -45,7 +45,9 @@ function Field({
   return (
     <div className="flex items-start justify-between gap-3 rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm">
       <div className="min-w-0">
-        <div className="text-[10px] tracking-[0.35em] text-white/35">{label}</div>
+        <div className="text-[10px] tracking-[0.35em] text-white/35">
+          {label}
+        </div>
         <div className="mt-1 text-sm font-semibold text-white/90 break-words">
           {value}
         </div>
@@ -105,7 +107,9 @@ function DriveAction({
       "
     >
       <div className="min-w-0">
-        <div className="text-[10px] tracking-[0.35em] text-white/35">{kind}</div>
+        <div className="text-[10px] tracking-[0.35em] text-white/35">
+          {kind}
+        </div>
         <div className="mt-1 min-w-0 truncate text-sm text-white/85" title={url}>
           <span className="mr-2">{icon ?? "🔗"}</span>
           <span className="font-semibold text-white/90">{label}</span>
@@ -159,20 +163,28 @@ function isProbablyDriveUrl(url: string) {
   );
 }
 
+/**
+ * ✅ Bloc Timeline
+ * - Photo: affichée via DriveAction (non éditable ici)
+ * - Notes: textarea éditable (persist via PATCH)
+ *
+ * IMPORTANT: on le rend TOUJOURS, sinon tu ne peux pas "commencer" une timeline.
+ */
 function TimelineBlock({
   title,
   photoUrl,
   notes,
+  onNotesChange,
   kind = "TIMELINE",
+  placeholder,
 }: {
   title: string;
   photoUrl?: string | null;
-  notes?: string | null;
+  notes: string;
+  onNotesChange: (v: string) => void;
   kind?: string;
+  placeholder?: string;
 }) {
-  const hasAny = Boolean((photoUrl ?? "").trim()) || Boolean((notes ?? "").trim());
-  if (!hasAny) return null;
-
   return (
     <div className="rounded-2xl border border-white/10 bg-black/35 p-4 space-y-3">
       <div className="text-xs tracking-[0.25em] text-white/35">{title}</div>
@@ -190,13 +202,14 @@ function TimelineBlock({
           <div className="text-[10px] tracking-[0.35em] text-white/35">
             REMARQUES / AJUSTEMENTS
           </div>
-          {notes?.trim() ? (
-            <div className="mt-2 whitespace-pre-wrap text-sm text-white/85">
-              {notes}
-            </div>
-          ) : (
-            <div className="mt-1 text-xs text-white/45">Aucune note</div>
-          )}
+
+          <textarea
+            className="mt-2 w-full rounded-xl border border-white/10 bg-black/60 p-3 text-sm text-white/90 outline-none placeholder:text-white/35 focus:border-amber-200/30 focus:ring-1 focus:ring-amber-200/15"
+            rows={4}
+            value={notes}
+            onChange={(e) => onNotesChange(e.target.value)}
+            placeholder={placeholder ?? "Séquences clés, erreurs, timings..."}
+          />
         </div>
       </div>
     </div>
@@ -204,9 +217,19 @@ function TimelineBlock({
 }
 
 export default function GameDetailClient({ game }: { game: GameDTO }) {
-  // (on conserve ton edit existant: notes + score sheet)
+  // ✅ edits existants
   const [notes, setNotes] = useState(game.notes ?? "");
   const [scoreSheetUrl, setScoreSheetUrl] = useState(game.scoreSheetUrl ?? "");
+
+  // ✅ Notes timeline (type-safe, plus de as any)
+  const [deploymentNotes, setDeploymentNotes] = useState(
+    game.deploymentNotes ?? ""
+  );
+  const [t1Notes, setT1Notes] = useState(game.t1Notes ?? "");
+  const [t2Notes, setT2Notes] = useState(game.t2Notes ?? "");
+  const [t3Notes, setT3Notes] = useState(game.t3Notes ?? "");
+  const [t4Notes, setT4Notes] = useState(game.t4Notes ?? "");
+  const [t5Notes, setT5Notes] = useState(game.t5Notes ?? "");
 
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -239,62 +262,13 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
       ? ` vs ${game.opponent}`
       : "");
 
-  async function saveGameEdits() {
-    if (!isProbablyDriveUrl(scoreSheetUrl)) {
-      setMsg("❌ Lien Drive invalide pour la feuille de score.");
-      return;
-    }
-
-    setSaving(true);
-    setMsg(null);
-
-    try {
-      const res = await fetch(`/api/games/${game.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          notes,
-          scoreSheetUrl: scoreSheetUrl.trim() || null,
-        }),
-      });
-
-      if (!res.ok) {
-        let text = "";
-        try {
-          const j = await res.json();
-          text = j?.error || j?.details || JSON.stringify(j);
-        } catch {
-          text = await res.text().catch(() => "");
-        }
-        throw new Error(text || `PATCH failed (${res.status})`);
-      }
-
-      setMsg("✅ Sauvegardé (notes + feuille de score).");
-    } catch (e: any) {
-      setMsg(`❌ ${e?.message ?? "Erreur"}`);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  const hasDirty =
-    (notes ?? "") !== (game.notes ?? "") ||
-    (scoreSheetUrl ?? "") !== (game.scoreSheetUrl ?? "");
-
-  // ✅ Champs timeline (nouveaux)
-  const deploymentPhotoUrl = (game as any).deploymentPhotoUrl as string | null | undefined;
-  const t1PhotoUrl = (game as any).t1PhotoUrl as string | null | undefined;
-  const t2PhotoUrl = (game as any).t2PhotoUrl as string | null | undefined;
-  const t3PhotoUrl = (game as any).t3PhotoUrl as string | null | undefined;
-  const t4PhotoUrl = (game as any).t4PhotoUrl as string | null | undefined;
-  const t5PhotoUrl = (game as any).t5PhotoUrl as string | null | undefined;
-
-  const deploymentNotes = (game as any).deploymentNotes as string | null | undefined;
-  const t1Notes = (game as any).t1Notes as string | null | undefined;
-  const t2Notes = (game as any).t2Notes as string | null | undefined;
-  const t3Notes = (game as any).t3Notes as string | null | undefined;
-  const t4Notes = (game as any).t4Notes as string | null | undefined;
-  const t5Notes = (game as any).t5Notes as string | null | undefined;
+  // ✅ Photos timeline (type-safe)
+  const deploymentPhotoUrl = game.deploymentPhotoUrl ?? null;
+  const t1PhotoUrl = game.t1PhotoUrl ?? null;
+  const t2PhotoUrl = game.t2PhotoUrl ?? null;
+  const t3PhotoUrl = game.t3PhotoUrl ?? null;
+  const t4PhotoUrl = game.t4PhotoUrl ?? null;
+  const t5PhotoUrl = game.t5PhotoUrl ?? null;
 
   const hasTimeline =
     Boolean((deploymentPhotoUrl ?? "").trim()) ||
@@ -309,6 +283,63 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
     Boolean((t3Notes ?? "").trim()) ||
     Boolean((t4Notes ?? "").trim()) ||
     Boolean((t5Notes ?? "").trim());
+
+  async function saveGameEdits() {
+    if (!isProbablyDriveUrl(scoreSheetUrl)) {
+      setMsg("❌ Lien Drive invalide pour la feuille de score.");
+      return;
+    }
+
+    setSaving(true);
+    setMsg(null);
+
+    try {
+      const res = await fetch(`/api/games/${game.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          // existants
+          notes,
+          scoreSheetUrl: scoreSheetUrl.trim() || null,
+
+          // ✅ notes par tour
+          deploymentNotes: deploymentNotes.trim() || null,
+          t1Notes: t1Notes.trim() || null,
+          t2Notes: t2Notes.trim() || null,
+          t3Notes: t3Notes.trim() || null,
+          t4Notes: t4Notes.trim() || null,
+          t5Notes: t5Notes.trim() || null,
+        }),
+      });
+
+      if (!res.ok) {
+        let text = "";
+        try {
+          const j = await res.json();
+          text = j?.error || j?.details || JSON.stringify(j);
+        } catch {
+          text = await res.text().catch(() => "");
+        }
+        throw new Error(text || `PATCH failed (${res.status})`);
+      }
+
+      setMsg("✅ Sauvegardé (notes + score sheet + timeline).");
+    } catch (e: any) {
+      setMsg(`❌ ${e?.message ?? "Erreur"}`);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const hasDirty =
+    (notes ?? "") !== (game.notes ?? "") ||
+    (scoreSheetUrl ?? "") !== (game.scoreSheetUrl ?? "") ||
+    (deploymentNotes ?? "") !== (game.deploymentNotes ?? "") ||
+    (t1Notes ?? "") !== (game.t1Notes ?? "") ||
+    (t2Notes ?? "") !== (game.t2Notes ?? "") ||
+    (t3Notes ?? "") !== (game.t3Notes ?? "") ||
+    (t4Notes ?? "") !== (game.t4Notes ?? "") ||
+    (t5Notes ?? "") !== (game.t5Notes ?? "");
 
   return (
     <main className="relative min-h-screen overflow-hidden text-white">
@@ -342,7 +373,9 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
                 >
                   {resultLabel(game.result)}
                 </span>
-                {typeof game.points === "number" ? <Pill>{game.points} pts</Pill> : null}
+                {typeof game.points === "number" ? (
+                  <Pill>{game.points} pts</Pill>
+                ) : null}
                 {scoreLine ? <Pill>Score {scoreLine}</Pill> : null}
               </div>
 
@@ -392,10 +425,14 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
             />
 
             <div className="rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm space-y-2">
-              <div className="text-[10px] tracking-[0.35em] text-white/35">TOI</div>
+              <div className="text-[10px] tracking-[0.35em] text-white/35">
+                TOI
+              </div>
               <div className="text-sm text-white/85">
                 <span className="text-white/45">Faction:</span>{" "}
-                <span className="font-semibold text-white/95">{game.myFaction ?? "—"}</span>
+                <span className="font-semibold text-white/95">
+                  {game.myFaction ?? "—"}
+                </span>
               </div>
               <div className="text-sm text-white/85">
                 <span className="text-white/45">Détachement:</span>{" "}
@@ -411,7 +448,9 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
               </div>
               <div className="text-sm text-white/85">
                 <span className="text-white/45">Faction:</span>{" "}
-                <span className="font-semibold text-white/95">{game.oppFaction ?? "—"}</span>
+                <span className="font-semibold text-white/95">
+                  {game.oppFaction ?? "—"}
+                </span>
               </div>
               <div className="text-sm text-white/85">
                 <span className="text-white/45">Détachement:</span>{" "}
@@ -425,14 +464,21 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
           {/* ✅ Listes d’armée */}
           <section className="rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-semibold text-white/85">Listes d’armée</div>
+              <div className="text-sm font-semibold text-white/85">
+                Listes d’armée
+              </div>
               <div className="text-[10px] tracking-[0.35em] text-white/35">
                 DRIVE • PDF
               </div>
             </div>
 
             <div className="grid gap-2 sm:grid-cols-2">
-              <DriveAction label="PDF (toi)" href={game.myArmyPdfUrl ?? ""} icon="📄" kind="ARMY LIST" />
+              <DriveAction
+                label="PDF (toi)"
+                href={game.myArmyPdfUrl ?? ""}
+                icon="📄"
+                kind="ARMY LIST"
+              />
               <DriveAction
                 label="PDF (adversaire)"
                 href={game.oppArmyPdfUrl ?? ""}
@@ -443,8 +489,12 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
 
             {game.myListText ? (
               <div className="pt-2">
-                <div className="text-[10px] tracking-[0.35em] text-white/35">TEXTE ENRICHI • TOI</div>
-                <div className="mt-2 whitespace-pre-wrap text-sm text-white/85">{game.myListText}</div>
+                <div className="text-[10px] tracking-[0.35em] text-white/35">
+                  TEXTE ENRICHI • TOI
+                </div>
+                <div className="mt-2 whitespace-pre-wrap text-sm text-white/85">
+                  {game.myListText}
+                </div>
               </div>
             ) : null}
 
@@ -453,7 +503,9 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
                 <div className="text-[10px] tracking-[0.35em] text-white/35">
                   TEXTE ENRICHI • ADVERSAIRE
                 </div>
-                <div className="mt-2 whitespace-pre-wrap text-sm text-white/85">{game.oppListText}</div>
+                <div className="mt-2 whitespace-pre-wrap text-sm text-white/85">
+                  {game.oppListText}
+                </div>
               </div>
             ) : null}
           </section>
@@ -461,7 +513,9 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
           {/* ✅ Feuille de score */}
           <section className="rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-semibold text-white/85">Feuille de score</div>
+              <div className="text-sm font-semibold text-white/85">
+                Feuille de score
+              </div>
               <div className="text-[10px] tracking-[0.35em] text-white/35">
                 DRIVE • PDF/PHOTO
               </div>
@@ -483,37 +537,84 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
             />
           </section>
 
-          {/* ✅ TIMELINE (Déploiement + T1..T5) */}
+          {/* ✅ TIMELINE — TOUJOURS visible + éditable */}
           <section className="rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-semibold text-white/85">Timeline (tour par tour)</div>
-              <div className="text-[10px] tracking-[0.35em] text-white/35">DRIVE • PHOTO + NOTES</div>
+              <div className="text-sm font-semibold text-white/85">
+                Timeline (tour par tour)
+              </div>
+              <div className="text-[10px] tracking-[0.35em] text-white/35">
+                DRIVE • PHOTO + NOTES
+              </div>
             </div>
 
-            {hasTimeline ? (
-              <div className="space-y-4">
-                <TimelineBlock
-                  title="DÉPLOIEMENT"
-                  photoUrl={deploymentPhotoUrl}
-                  notes={deploymentNotes}
-                  kind="DEPLOYMENT"
-                />
-                <TimelineBlock title="T1" photoUrl={t1PhotoUrl} notes={t1Notes} kind="TURN 1" />
-                <TimelineBlock title="T2" photoUrl={t2PhotoUrl} notes={t2Notes} kind="TURN 2" />
-                <TimelineBlock title="T3" photoUrl={t3PhotoUrl} notes={t3Notes} kind="TURN 3" />
-                <TimelineBlock title="T4" photoUrl={t4PhotoUrl} notes={t4Notes} kind="TURN 4" />
-                <TimelineBlock title="T5" photoUrl={t5PhotoUrl} notes={t5Notes} kind="TURN 5" />
+            <div className="space-y-4">
+              <TimelineBlock
+                title="DÉPLOIEMENT"
+                photoUrl={deploymentPhotoUrl}
+                notes={deploymentNotes}
+                onNotesChange={setDeploymentNotes}
+                kind="DEPLOYMENT"
+                placeholder="Plan de jeu, erreurs de déploiement, trade-offs..."
+              />
+              <TimelineBlock
+                title="T1"
+                photoUrl={t1PhotoUrl}
+                notes={t1Notes}
+                onNotesChange={setT1Notes}
+                kind="TURN 1"
+                placeholder="Séquences clés, erreurs, timings..."
+              />
+              <TimelineBlock
+                title="T2"
+                photoUrl={t2PhotoUrl}
+                notes={t2Notes}
+                onNotesChange={setT2Notes}
+                kind="TURN 2"
+                placeholder="Trades, scoring, priorités..."
+              />
+              <TimelineBlock
+                title="T3"
+                photoUrl={t3PhotoUrl}
+                notes={t3Notes}
+                onNotesChange={setT3Notes}
+                kind="TURN 3"
+                placeholder="Tempo, deny, pivot..."
+              />
+              <TimelineBlock
+                title="T4"
+                photoUrl={t4PhotoUrl}
+                notes={t4Notes}
+                onNotesChange={setT4Notes}
+                kind="TURN 4"
+                placeholder="Clutch plays, gestion ressources..."
+              />
+              <TimelineBlock
+                title="T5"
+                photoUrl={t5PhotoUrl}
+                notes={t5Notes}
+                onNotesChange={setT5Notes}
+                kind="TURN 5"
+                placeholder="Fin de game, closing, erreurs..."
+              />
+            </div>
+
+            {!hasTimeline ? (
+              <div className="text-xs text-white/45">
+                Tu peux écrire des commentaires même si aucune photo n’est renseignée.
               </div>
-            ) : (
-              <div className="text-xs text-white/45">Aucune timeline renseignée.</div>
-            )}
+            ) : null}
           </section>
 
           {/* Notes (persist + sauvegarde) */}
           <section className="rounded-2xl border border-white/10 bg-black/45 p-4 shadow-sm space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-semibold text-white/85">Notes post-partie</div>
-              <div className="text-[10px] tracking-[0.35em] text-white/35">PERSISTENT</div>
+              <div className="text-sm font-semibold text-white/85">
+                Notes post-partie
+              </div>
+              <div className="text-[10px] tracking-[0.35em] text-white/35">
+                PERSISTENT
+              </div>
             </div>
 
             <textarea
@@ -546,15 +647,21 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
               {msg ? (
                 <span className="text-xs text-white/70">{msg}</span>
               ) : hasDirty ? (
-                <span className="text-xs text-amber-200/60">Des changements sont en attente.</span>
+                <span className="text-xs text-amber-200/60">
+                  Des changements sont en attente.
+                </span>
               ) : (
-                <span className="text-xs text-white/35">Modifie puis sauvegarde pour persister.</span>
+                <span className="text-xs text-white/35">
+                  Modifie puis sauvegarde pour persister.
+                </span>
               )}
             </div>
           </section>
 
           <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          <div className="text-center text-xs text-white/35">The Long War is logged.</div>
+          <div className="text-center text-xs text-white/35">
+            The Long War is logged.
+          </div>
         </div>
       </div>
     </main>

@@ -15,6 +15,24 @@ async function getId(params: any): Promise<string | null> {
   return typeof id === "string" && id.length > 0 ? id : null;
 }
 
+/**
+ * ✅ Récupère les colonnes réellement présentes en DB (Postgres)
+ * Important: selon ta config Prisma, ta table peut s'appeler "Game" (case-sensitive)
+ * ou "game". On check les deux.
+ */
+async function getGameColumns(): Promise<Set<string>> {
+  const rows = await prisma.$queryRaw<
+    { column_name: string }[]
+  >`
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND (table_name = 'Game' OR table_name = 'game')
+  `;
+
+  return new Set(rows.map((r) => r.column_name));
+}
+
 export default async function GameDetailPage({
   params,
 }: {
@@ -23,62 +41,146 @@ export default async function GameDetailPage({
   const id = await getId(params);
   if (!id) notFound();
 
-  const game = await prisma.game.findUnique({ where: { id } });
+  const cols = await getGameColumns();
+
+  // ✅ select construit uniquement avec les colonnes existantes
+  const select: Record<string, boolean> = {
+    id: true,
+    createdAt: true,
+    gameType: true,
+  };
+
+  // champs "courants" (on les ajoute seulement si la colonne existe)
+  const maybe = (name: string) => {
+    if (cols.has(name)) select[name] = true;
+  };
+
+  // legacy / safe-ish
+  ["opponent", "result", "notes", "build", "first", "score", "tag1", "tag2"].forEach(maybe);
+
+  // pdf + uploads + médias
+  ["myArmyPdfUrl", "oppArmyPdfUrl", "scoreSheetUrl", "photoUrls"].forEach(maybe);
+
+  // v1 40k
+  [
+    "playedAt",
+    "points",
+    "missionPack",
+    "primaryMission",
+    "deployment",
+    "terrainLayout",
+    "myFaction",
+    "myDetachment",
+    "myScore",
+    "myListText",
+    "oppFaction",
+    "oppDetachment",
+    "oppScore",
+    "oppListText",
+  ].forEach(maybe);
+
+  // timeline
+  [
+    "deploymentPhotoUrl",
+    "t1PhotoUrl",
+    "t2PhotoUrl",
+    "t3PhotoUrl",
+    "t4PhotoUrl",
+    "t5PhotoUrl",
+    "deploymentNotes",
+    "t1Notes",
+    "t2Notes",
+    "t3Notes",
+    "t4Notes",
+    "t5Notes",
+  ].forEach(maybe);
+
+  const game = await prisma.game.findUnique({
+    where: { id },
+    select: select as any,
+  });
+
   if (!game) notFound();
 
   const g: any = game;
 
-  // ✅ Normalisation des URLs Drive (si tu as encore d'anciens champs, tu peux les fallback ici)
-  const myPdfUrl: string | null = g.myArmyPdfUrl ?? null;
-  const oppPdfUrl: string | null = g.oppArmyPdfUrl ?? null;
-  const scoreSheetUrl: string | null = g.scoreSheetUrl ?? null;
-
-  // (optionnel) si un jour tu ajoutes un champ dossier drive pour photos
-  const photosDriveUrl: string | null =
-    typeof g.photosDriveUrl === "string" ? g.photosDriveUrl : null;
+  const toIsoOrNull = (d: any): string | null => {
+    try {
+      if (!d) return null;
+      const dd = d instanceof Date ? d : new Date(d);
+      return Number.isNaN(dd.getTime()) ? null : dd.toISOString();
+    } catch {
+      return null;
+    }
+  };
+  const numOrNull = (x: any): number | null =>
+    typeof x === "number" && Number.isFinite(x) ? x : null;
+  const strOrNull = (x: any): string | null =>
+    typeof x === "string" ? x : null;
 
   const safeGame: GameDTO = {
-    id: game.id,
-    createdAt: game.createdAt.toISOString(),
-    gameType: game.gameType,
+    id: g.id,
+    createdAt: g.createdAt.toISOString(),
+    gameType: g.gameType,
 
-    playedAt: g.playedAt ? new Date(g.playedAt).toISOString() : null,
-    opponent: g.opponent ?? null,
-    points: typeof g.points === "number" ? g.points : null,
+    // legacy
+    build: typeof g.build === "string" ? g.build : "",
+    first: Boolean(g.first),
+    score: numOrNull(g.score),
+    tag1: strOrNull(g.tag1),
+    tag2: strOrNull(g.tag2),
 
-    missionPack: g.missionPack ?? null,
-    primaryMission: g.primaryMission ?? null,
-    deployment: g.deployment ?? null,
-    terrainLayout: g.terrainLayout ?? null,
+    // v1
+    playedAt: toIsoOrNull(g.playedAt),
+    opponent: strOrNull(g.opponent),
+    points: numOrNull(g.points),
 
-    myFaction: g.myFaction ?? null,
-    myDetachment: g.myDetachment ?? null,
-    myArmyPdfUrl: myPdfUrl,
-    myListText: g.myListText ?? null,
+    missionPack: strOrNull(g.missionPack),
+    primaryMission: strOrNull(g.primaryMission),
+    deployment: strOrNull(g.deployment),
+    terrainLayout: strOrNull(g.terrainLayout),
 
-    oppFaction: g.oppFaction ?? null,
-    oppDetachment: g.oppDetachment ?? null,
-    oppArmyPdfUrl: oppPdfUrl,
-    oppListText: g.oppListText ?? null,
+    myFaction: strOrNull(g.myFaction),
+    myDetachment: strOrNull(g.myDetachment),
+    myArmyPdfUrl: strOrNull(g.myArmyPdfUrl),
+    myListText: strOrNull(g.myListText),
 
-    // ✅ Feuille de score (Drive) — PDF ou photo
-    scoreSheetUrl,
+    oppFaction: strOrNull(g.oppFaction),
+    oppDetachment: strOrNull(g.oppDetachment),
+    oppArmyPdfUrl: strOrNull(g.oppArmyPdfUrl),
+    oppListText: strOrNull(g.oppListText),
 
-    myScore: g.myScore ?? null,
-    oppScore: g.oppScore ?? null,
-    result: g.result ?? "—",
+    scoreSheetUrl: strOrNull(g.scoreSheetUrl),
 
-    notes: g.notes ?? null,
+    myScore: numOrNull(g.myScore),
+    oppScore: numOrNull(g.oppScore),
+    result: (g.result as any) ?? "—",
+
+    notes: strOrNull(g.notes),
     photoUrls: Array.isArray(g.photoUrls) ? g.photoUrls : [],
 
-    // ✅ (optionnel) si ton type GameDTO l'autorise.
-    // Si GameDTO ne contient pas ce champ, supprime ces 2 lignes.
-    ...(photosDriveUrl ? ({ photosDriveUrl } as any) : {}),
+    // timeline (si absent => null)
+    deploymentPhotoUrl: strOrNull(g.deploymentPhotoUrl),
+    t1PhotoUrl: strOrNull(g.t1PhotoUrl),
+    t2PhotoUrl: strOrNull(g.t2PhotoUrl),
+    t3PhotoUrl: strOrNull(g.t3PhotoUrl),
+    t4PhotoUrl: strOrNull(g.t4PhotoUrl),
+    t5PhotoUrl: strOrNull(g.t5PhotoUrl),
+
+    deploymentNotes: strOrNull(g.deploymentNotes),
+    t1Notes: strOrNull(g.t1Notes),
+    t2Notes: strOrNull(g.t2Notes),
+    t3Notes: strOrNull(g.t3Notes),
+    t4Notes: strOrNull(g.t4Notes),
+    t5Notes: strOrNull(g.t5Notes),
+
+    // aliases legacy si besoin
+    armyListPdfUrl: strOrNull(g.armyListPdfUrl) ?? strOrNull(g.myArmyPdfUrl),
+    armyListPdfUrl2: strOrNull(g.armyListPdfUrl2) ?? strOrNull(g.oppArmyPdfUrl),
   };
 
   return (
     <main className="relative mx-auto max-w-5xl p-6">
-      {/* ✅ Retour toujours visible (au-dessus de tout) */}
       <Link
         href="/40k/games"
         className="
@@ -100,7 +202,6 @@ export default async function GameDetailPage({
         <span>Historique 40k</span>
       </Link>
 
-      {/* ✅ petit spacer pour éviter que le bouton fixe recouvre le contenu */}
       <div className="pt-14">
         <GameDetailClient game={safeGame} />
       </div>
