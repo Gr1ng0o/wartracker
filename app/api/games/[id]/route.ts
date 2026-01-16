@@ -19,9 +19,15 @@ async function getId(params: any): Promise<string | null> {
 }
 
 function isMissingColumnError(e: any) {
-  return e?.code === "P2022" || String(e?.message ?? "").includes("does not exist");
+  const msg = String(e?.message ?? "");
+  return e?.code === "P2022" || msg.includes("does not exist");
 }
 
+/**
+ * ✅ PATCH — sauvegarde notes + scoreSheetUrl + notes tour par tour
+ * - tente fullData
+ * - fallback minimalData si DB non migrée (colonnes absentes)
+ */
 export async function PATCH(req: Request, ctx: { params: any }) {
   const id = await getId(ctx.params);
   if (!id) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
@@ -57,7 +63,6 @@ export async function PATCH(req: Request, ctx: { params: any }) {
     return NextResponse.json({ ok: true, mode: "full", id: updated.id });
   } catch (e: any) {
     if (isMissingColumnError(e)) {
-      // ✅ fallback sans colonnes timeline
       const updated2 = await prisma.game.update({
         where: { id },
         data: minimalData as any,
@@ -74,6 +79,27 @@ export async function PATCH(req: Request, ctx: { params: any }) {
     console.error("[PATCH /api/games/:id] ERROR", e);
     return NextResponse.json(
       { error: "Update failed", details: String(e?.message ?? e) },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * ✅ DELETE — suppression d'une game
+ * - compatible params Promise
+ * - renvoie { ok: true } si supprimé
+ */
+export async function DELETE(_req: Request, ctx: { params: any }) {
+  const id = await getId(ctx.params);
+  if (!id) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+
+  try {
+    await prisma.game.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    console.error("[DELETE /api/games/:id] ERROR", e);
+    return NextResponse.json(
+      { error: "Delete failed", details: String(e?.message ?? e) },
       { status: 500 }
     );
   }
