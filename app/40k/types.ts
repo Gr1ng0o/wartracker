@@ -1,17 +1,35 @@
+/**
+ * 🔒 DTO SAFE partagé serveur / client
+ * WarTracker — Warhammer 40k
+ *
+ * ⚠️ Important :
+ * - `notes` = Notes post-partie globales
+ * - `deploymentNotes / t1Notes / ...` = REMARQUES / AJUSTEMENTS (timeline)
+ */
 export type GameDTO = {
+  /* =========================
+   * Identité
+   * ========================= */
   id: string;
   createdAt: string;
-  gameType: string;
+  gameType: string; // "40k" | "FaB"
 
+  /* =========================
+   * Legacy (à garder)
+   * ========================= */
   build?: string;
   first?: boolean;
   score?: number | null;
   tag1?: string | null;
   tag2?: string | null;
 
+  // legacy PDF aliases (anciennes pages)
   armyListPdfUrl?: string | null;
   armyListPdfUrl2?: string | null;
 
+  /* =========================
+   * V1 – Infos game
+   * ========================= */
   playedAt?: string | null;
   opponent?: string | null;
   points?: number | null;
@@ -21,6 +39,9 @@ export type GameDTO = {
   deployment?: string | null;
   terrainLayout?: string | null;
 
+  /* =========================
+   * Armées
+   * ========================= */
   myFaction?: string | null;
   myDetachment?: string | null;
   myArmyPdfUrl?: string | null;
@@ -31,20 +52,28 @@ export type GameDTO = {
   oppArmyPdfUrl?: string | null;
   oppListText?: string | null;
 
+  /* =========================
+   * Score
+   * ========================= */
   scoreSheetUrl?: string | null;
 
   myScore?: number | null;
   oppScore?: number | null;
   result?: "W" | "L" | "D" | string;
 
-  notes?: string | null;
+  /* =========================
+   * Notes globales
+   * ========================= */
+  notes?: string | null; // ❗ Notes POST-PARTIE uniquement
 
+  /* =========================
+   * Médias généraux
+   * ========================= */
   photoUrls?: string[];
 
   /* =========================
-   * V1 – Timeline (tour par tour)
+   * Timeline – Photos
    * ========================= */
-
   deploymentPhotoUrl?: string | null;
   t1PhotoUrl?: string | null;
   t2PhotoUrl?: string | null;
@@ -52,6 +81,9 @@ export type GameDTO = {
   t4PhotoUrl?: string | null;
   t5PhotoUrl?: string | null;
 
+  /* =========================
+   * Timeline – REMARQUES / AJUSTEMENTS
+   * ========================= */
   deploymentNotes?: string | null;
   t1Notes?: string | null;
   t2Notes?: string | null;

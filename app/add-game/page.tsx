@@ -14,6 +14,14 @@ export default function AddGamePage() {
   const [tag2, setTag2] = useState("");
   const [notes, setNotes] = useState("");
 
+  // ✅ NEW: notes par tour (création)
+  const [deploymentNotes, setDeploymentNotes] = useState("");
+  const [t1Notes, setT1Notes] = useState("");
+  const [t2Notes, setT2Notes] = useState("");
+  const [t3Notes, setT3Notes] = useState("");
+  const [t4Notes, setT4Notes] = useState("");
+  const [t5Notes, setT5Notes] = useState("");
+
   // PDF (URL en DB)
   const [armyListPdfUrl, setArmyListPdfUrl] = useState<string | null>(null);
   const [uploadingPdf, setUploadingPdf] = useState(false);
@@ -68,6 +76,15 @@ export default function AddGamePage() {
     setTag1("");
     setTag2("");
     setNotes("");
+
+    // ✅ reset timeline notes
+    setDeploymentNotes("");
+    setT1Notes("");
+    setT2Notes("");
+    setT3Notes("");
+    setT4Notes("");
+    setT5Notes("");
+
     clearPdf();
   }
 
@@ -90,6 +107,15 @@ export default function AddGamePage() {
         tag1,
         tag2,
         notes,
+
+        // ✅ NEW: envoyés au backend à la création
+        deploymentNotes,
+        t1Notes,
+        t2Notes,
+        t3Notes,
+        t4Notes,
+        t5Notes,
+
         armyListPdfUrl: gameType === "40k" ? armyListPdfUrl : null,
       }),
     });
@@ -258,6 +284,68 @@ export default function AddGamePage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Moment clé, erreur, ajustement…"
+                />
+              </label>
+
+              {/* ✅ Timeline notes */}
+              <label className="space-y-2 sm:col-span-2">
+                <span className="text-sm font-semibold text-white/80">Déploiement (notes)</span>
+                <textarea
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  rows={3}
+                  value={deploymentNotes}
+                  onChange={(e) => setDeploymentNotes(e.target.value)}
+                  placeholder="Plan de jeu, erreurs de déploiement…"
+                />
+              </label>
+
+              <label className="space-y-2 sm:col-span-2">
+                <span className="text-sm font-semibold text-white/80">T1</span>
+                <textarea
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  rows={3}
+                  value={t1Notes}
+                  onChange={(e) => setT1Notes(e.target.value)}
+                />
+              </label>
+
+              <label className="space-y-2 sm:col-span-2">
+                <span className="text-sm font-semibold text-white/80">T2</span>
+                <textarea
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  rows={3}
+                  value={t2Notes}
+                  onChange={(e) => setT2Notes(e.target.value)}
+                />
+              </label>
+
+              <label className="space-y-2 sm:col-span-2">
+                <span className="text-sm font-semibold text-white/80">T3</span>
+                <textarea
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  rows={3}
+                  value={t3Notes}
+                  onChange={(e) => setT3Notes(e.target.value)}
+                />
+              </label>
+
+              <label className="space-y-2 sm:col-span-2">
+                <span className="text-sm font-semibold text-white/80">T4</span>
+                <textarea
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  rows={3}
+                  value={t4Notes}
+                  onChange={(e) => setT4Notes(e.target.value)}
+                />
+              </label>
+
+              <label className="space-y-2 sm:col-span-2">
+                <span className="text-sm font-semibold text-white/80">T5</span>
+                <textarea
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  rows={3}
+                  value={t5Notes}
+                  onChange={(e) => setT5Notes(e.target.value)}
                 />
               </label>
 

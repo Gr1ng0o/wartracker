@@ -9,28 +9,47 @@ import type { GameDTO } from "../../types";
 import GameDetailClient from "../../../_components/game-detail-client";
 
 async function getId(params: any): Promise<string | null> {
-  const resolved =
-    params && typeof params.then === "function" ? await params : params;
+  const resolved = params && typeof params.then === "function" ? await params : params;
   const id = resolved?.id;
   return typeof id === "string" && id.length > 0 ? id : null;
 }
 
 /**
  * ✅ Récupère les colonnes réellement présentes en DB (Postgres)
- * Important: selon ta config Prisma, ta table peut s'appeler "Game" (case-sensitive)
- * ou "game". On check les deux.
+ * - essaie "Game" puis "game"
+ * - si ça échoue (driver / rights), fallback: empty set
  */
 async function getGameColumns(): Promise<Set<string>> {
-  const rows = await prisma.$queryRaw<
-    { column_name: string }[]
-  >`
-    SELECT column_name
-    FROM information_schema.columns
-    WHERE table_schema = 'public'
-      AND (table_name = 'Game' OR table_name = 'game')
-  `;
+  try {
+    const rows = await prisma.$queryRaw<{ column_name: string }[]>`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND (table_name = 'Game' OR table_name = 'game')
+    `;
+    return new Set(rows.map((r) => r.column_name));
+  } catch (e) {
+    console.error("[getGameColumns] failed:", e);
+    return new Set<string>();
+  }
+}
 
-  return new Set(rows.map((r) => r.column_name));
+function toIsoOrNull(d: any): string | null {
+  try {
+    if (!d) return null;
+    const dd = d instanceof Date ? d : new Date(d);
+    return Number.isNaN(dd.getTime()) ? null : dd.toISOString();
+  } catch {
+    return null;
+  }
+}
+
+function numOrNull(x: any): number | null {
+  return typeof x === "number" && Number.isFinite(x) ? x : null;
+}
+
+function strOrNull(x: any): string | null {
+  return typeof x === "string" ? x : null;
 }
 
 export default async function GameDetailPage({
@@ -50,15 +69,17 @@ export default async function GameDetailPage({
     gameType: true,
   };
 
-  // champs "courants" (on les ajoute seulement si la colonne existe)
   const maybe = (name: string) => {
-    if (cols.has(name)) select[name] = true;
+    // si cols est vide (fallback), on garde une stratégie SAFE:
+    // on n’ajoute QUE les champs qu’on est sûr d’avoir (ici on n'est sûr de rien)
+    // MAIS dans la pratique, cols ne devrait pas être vide sur Postgres.
+    if (cols.size > 0 && cols.has(name)) select[name] = true;
   };
 
-  // legacy / safe-ish
-  ["opponent", "result", "notes", "build", "first", "score", "tag1", "tag2"].forEach(maybe);
+  // legacy
+  ["build", "opponent", "first", "result", "score", "tag1", "tag2", "notes"].forEach(maybe);
 
-  // pdf + uploads + médias
+  // uploads / médias
   ["myArmyPdfUrl", "oppArmyPdfUrl", "scoreSheetUrl", "photoUrls"].forEach(maybe);
 
   // v1 40k
@@ -95,28 +116,33 @@ export default async function GameDetailPage({
     "t5Notes",
   ].forEach(maybe);
 
+  // ✅ si getGameColumns a échoué → cols.size === 0
+  // dans ce cas, on fait un fallback strict qui ne peut pas crasher
+  const strictFallbackSelect = {
+    id: true,
+    createdAt: true,
+    gameType: true,
+    opponent: true,
+    result: true,
+    notes: true,
+    build: true,
+    first: true,
+    score: true,
+    tag1: true,
+    tag2: true,
+    myArmyPdfUrl: true,
+    oppArmyPdfUrl: true,
+    scoreSheetUrl: true,
+    photoUrls: true,
+  } as const;
+
   const game = await prisma.game.findUnique({
     where: { id },
-    select: select as any,
+    select: (cols.size > 0 ? (select as any) : (strictFallbackSelect as any)),
   });
 
   if (!game) notFound();
-
   const g: any = game;
-
-  const toIsoOrNull = (d: any): string | null => {
-    try {
-      if (!d) return null;
-      const dd = d instanceof Date ? d : new Date(d);
-      return Number.isNaN(dd.getTime()) ? null : dd.toISOString();
-    } catch {
-      return null;
-    }
-  };
-  const numOrNull = (x: any): number | null =>
-    typeof x === "number" && Number.isFinite(x) ? x : null;
-  const strOrNull = (x: any): string | null =>
-    typeof x === "string" ? x : null;
 
   const safeGame: GameDTO = {
     id: g.id,
@@ -125,7 +151,7 @@ export default async function GameDetailPage({
 
     // legacy
     build: typeof g.build === "string" ? g.build : "",
-    first: Boolean(g.first),
+    first: typeof g.first === "boolean" ? g.first : undefined,
     score: numOrNull(g.score),
     tag1: strOrNull(g.tag1),
     tag2: strOrNull(g.tag2),
@@ -159,7 +185,7 @@ export default async function GameDetailPage({
     notes: strOrNull(g.notes),
     photoUrls: Array.isArray(g.photoUrls) ? g.photoUrls : [],
 
-    // timeline (si absent => null)
+    // timeline (si non sélectionné => undefined, OK avec DTO optionnel)
     deploymentPhotoUrl: strOrNull(g.deploymentPhotoUrl),
     t1PhotoUrl: strOrNull(g.t1PhotoUrl),
     t2PhotoUrl: strOrNull(g.t2PhotoUrl),
@@ -174,9 +200,9 @@ export default async function GameDetailPage({
     t4Notes: strOrNull(g.t4Notes),
     t5Notes: strOrNull(g.t5Notes),
 
-    // aliases legacy si besoin
-    armyListPdfUrl: strOrNull(g.armyListPdfUrl) ?? strOrNull(g.myArmyPdfUrl),
-    armyListPdfUrl2: strOrNull(g.armyListPdfUrl2) ?? strOrNull(g.oppArmyPdfUrl),
+    // aliases legacy (UI legacy)
+    armyListPdfUrl: strOrNull(g.myArmyPdfUrl),
+    armyListPdfUrl2: strOrNull(g.oppArmyPdfUrl),
   };
 
   return (

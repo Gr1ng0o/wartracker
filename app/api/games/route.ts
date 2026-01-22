@@ -36,6 +36,31 @@ function parsePhotoUrls(v: unknown): string[] {
   return [];
 }
 
+function buildTimelineNotesBlock(input: {
+  deploymentNotes: string | null;
+  t1Notes: string | null;
+  t2Notes: string | null;
+  t3Notes: string | null;
+  t4Notes: string | null;
+  t5Notes: string | null;
+}): string {
+  const entries: Array<[string, string | null]> = [
+    ["DÉPLOIEMENT", input.deploymentNotes],
+    ["T1", input.t1Notes],
+    ["T2", input.t2Notes],
+    ["T3", input.t3Notes],
+    ["T4", input.t4Notes],
+    ["T5", input.t5Notes],
+  ];
+
+  const lines = entries
+    .filter(([, v]) => Boolean(v && v.trim()))
+    .map(([k, v]) => `• ${k}: ${v}`);
+
+  if (!lines.length) return "";
+  return `\n\n---\nTIMELINE\n${lines.join("\n")}\n`;
+}
+
 /**
  * ✅ IMPORTANT:
  * Tant que la DB n’a pas les colonnes timeline, Prisma ne doit PAS les “RETURN”.
@@ -94,7 +119,9 @@ export async function POST(req: Request) {
     const score = parseNullableInt(body.score);
     const tag1 = parseNullableString(body.tag1);
     const tag2 = parseNullableString(body.tag2);
-    const notes = parseNullableString(body.notes);
+
+    // notes "globales"
+    const notesBase = parseNullableString(body.notes);
 
     const myFaction = parseNullableString(body.myFaction);
     const myDetachment = parseNullableString(body.myDetachment);
@@ -110,9 +137,16 @@ export async function POST(req: Request) {
 
     const photoUrls = parsePhotoUrls(body.photoUrls);
 
-    // ✅ on continue de parser tes nouveaux champs (ça ne casse pas)
-    // MAIS on ne les enverra PAS à Prisma tant que la DB n’est pas à jour
-    // (sinon P2022 garanti).
+    // ✅ on parse les champs timeline
+    // ⚠️ mais tant que DB pas migrée, on les stocke dans notes (bloc TIMELINE)
+    const deploymentNotes = parseNullableString(body.deploymentNotes);
+    const t1Notes = parseNullableString(body.t1Notes);
+    const t2Notes = parseNullableString(body.t2Notes);
+    const t3Notes = parseNullableString(body.t3Notes);
+    const t4Notes = parseNullableString(body.t4Notes);
+    const t5Notes = parseNullableString(body.t5Notes);
+
+    // (photos timeline : même logique, on les ignore pour DB non migrée)
     const deploymentPhotoUrl = parseNullableString(body.deploymentPhotoUrl);
     const t1PhotoUrl = parseNullableString(body.t1PhotoUrl);
     const t2PhotoUrl = parseNullableString(body.t2PhotoUrl);
@@ -120,12 +154,17 @@ export async function POST(req: Request) {
     const t4PhotoUrl = parseNullableString(body.t4PhotoUrl);
     const t5PhotoUrl = parseNullableString(body.t5PhotoUrl);
 
-    const deploymentNotes = parseNullableString(body.deploymentNotes);
-    const t1Notes = parseNullableString(body.t1Notes);
-    const t2Notes = parseNullableString(body.t2Notes);
-    const t3Notes = parseNullableString(body.t3Notes);
-    const t4Notes = parseNullableString(body.t4Notes);
-    const t5Notes = parseNullableString(body.t5Notes);
+    const timelineBlock = buildTimelineNotesBlock({
+      deploymentNotes,
+      t1Notes,
+      t2Notes,
+      t3Notes,
+      t4Notes,
+      t5Notes,
+    });
+
+    const mergedNotesRaw = `${notesBase ?? ""}${timelineBlock}`.trim();
+    const mergedNotes = mergedNotesRaw.length ? mergedNotesRaw : null;
 
     const baseData: any = {
       gameType,
@@ -137,7 +176,9 @@ export async function POST(req: Request) {
       score: score ?? undefined,
       tag1: tag1 ?? undefined,
       tag2: tag2 ?? undefined,
-      notes: notes ?? undefined,
+
+      // ✅ ici on sauvegarde notes + timeline
+      notes: mergedNotes ?? undefined,
 
       myFaction: myFaction ?? undefined,
       myDetachment: myDetachment ?? undefined,
@@ -153,28 +194,29 @@ export async function POST(req: Request) {
       photoUrls,
     };
 
-    // ✅ Tant que la DB n’a pas les colonnes, NE PAS inclure timeline dans data.
-    // (Sinon crash P2022 à l’INSERT)
-    // Quand ta DB sera migrée, tu pourras remettre ces champs ici.
+    // ✅ Tant que la DB n’a pas les colonnes, NE PAS inclure timeline dans data (sinon P2022)
     void deploymentPhotoUrl;
     void t1PhotoUrl;
     void t2PhotoUrl;
     void t3PhotoUrl;
     void t4PhotoUrl;
     void t5PhotoUrl;
-    void deploymentNotes;
-    void t1Notes;
-    void t2Notes;
-    void t3Notes;
-    void t4Notes;
-    void t5Notes;
 
     const game = await prisma.game.create({
       data: baseData,
-      select: SAFE_SELECT, // ✅ ça empêche Prisma de “RETURN” les colonnes inexistantes
+      select: SAFE_SELECT,
     });
 
-    return Response.json(game, { status: 201 });
+    return Response.json(
+      {
+        ...game,
+        warning:
+          timelineBlock.trim().length > 0
+            ? "DB non migrée: timeline stockée dans notes (bloc TIMELINE)."
+            : null,
+      },
+      { status: 201 }
+    );
   } catch (e: any) {
     console.error("POST /api/games ERROR =", e);
     return Response.json(
