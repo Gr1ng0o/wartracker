@@ -44,21 +44,19 @@ function buildTimelineNotesBlock(input: {
   t4Notes: string | null;
   t5Notes: string | null;
 }): string {
-  const entries: Array<[string, string | null]> = [
-    ["DÉPLOIEMENT", input.deploymentNotes],
-    ["T1", input.t1Notes],
-    ["T2", input.t2Notes],
-    ["T3", input.t3Notes],
-    ["T4", input.t4Notes],
-    ["T5", input.t5Notes],
-  ];
+  const payload = {
+    deploymentNotes: input.deploymentNotes,
+    t1Notes: input.t1Notes,
+    t2Notes: input.t2Notes,
+    t3Notes: input.t3Notes,
+    t4Notes: input.t4Notes,
+    t5Notes: input.t5Notes,
+  };
 
-  const lines = entries
-    .filter(([, v]) => Boolean(v && v.trim()))
-    .map(([k, v]) => `• ${k}: ${v}`);
+  const hasAny = Object.values(payload).some((v) => Boolean(v && v.trim()));
+  if (!hasAny) return "";
 
-  if (!lines.length) return "";
-  return `\n\n---\nTIMELINE\n${lines.join("\n")}\n`;
+  return `\n\n/*WT_TIMELINE_V1:${JSON.stringify(payload)}:WT_TIMELINE_V1*/`;
 }
 
 /**
@@ -212,7 +210,7 @@ export async function POST(req: Request) {
         ...game,
         warning:
           timelineBlock.trim().length > 0
-            ? "DB non migrée: timeline stockée dans notes (bloc TIMELINE)."
+            ? "DB non migrée: timeline stockée dans notes (bloc WT_TIMELINE_V1)."
             : null,
       },
       { status: 201 }
