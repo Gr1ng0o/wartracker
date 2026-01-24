@@ -8,7 +8,6 @@ import GameDetailClient from "../../_components/game-detail-client";
 export const runtime = "nodejs";
 import { prisma } from "@/lib/prisma";
 
-
 type Ctx =
   | { params: { id: string } }
   | { params: Promise<{ id: string }> };
@@ -73,6 +72,8 @@ export default async function GameDetailPage(ctx: Ctx) {
     // Drive links : on utilise tes champs v1 si présents
     armyListPdfUrl: g.myArmyPdfUrl ?? null,
     armyListPdfUrl2: g.oppArmyPdfUrl ?? null,
+    myListText: g.myListText ?? null,
+    oppListText: g.oppListText ?? null,
 
     photoUrls: Array.isArray(g.photoUrls) ? g.photoUrls : [],
   };
