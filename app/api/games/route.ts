@@ -36,6 +36,11 @@ function parsePhotoUrls(v: unknown): string[] {
   return [];
 }
 
+function isMissingColumnError(e: any) {
+  const msg = String(e?.message ?? "");
+  return e?.code === "P2022" || msg.includes("does not exist");
+}
+
 function buildTimelineNotesBlock(input: {
   deploymentNotes: string | null;
   t1Notes: string | null;
@@ -136,7 +141,6 @@ export async function POST(req: Request) {
     const photoUrls = parsePhotoUrls(body.photoUrls);
 
     // ✅ on parse les champs timeline
-    // ⚠️ mais tant que DB pas migrée, on les stocke dans notes (bloc TIMELINE)
     const deploymentNotes = parseNullableString(body.deploymentNotes);
     const t1Notes = parseNullableString(body.t1Notes);
     const t2Notes = parseNullableString(body.t2Notes);
@@ -144,25 +148,13 @@ export async function POST(req: Request) {
     const t4Notes = parseNullableString(body.t4Notes);
     const t5Notes = parseNullableString(body.t5Notes);
 
-    // (photos timeline : même logique, on les ignore pour DB non migrée)
+    // photos timeline
     const deploymentPhotoUrl = parseNullableString(body.deploymentPhotoUrl);
     const t1PhotoUrl = parseNullableString(body.t1PhotoUrl);
     const t2PhotoUrl = parseNullableString(body.t2PhotoUrl);
     const t3PhotoUrl = parseNullableString(body.t3PhotoUrl);
     const t4PhotoUrl = parseNullableString(body.t4PhotoUrl);
     const t5PhotoUrl = parseNullableString(body.t5PhotoUrl);
-
-    const timelineBlock = buildTimelineNotesBlock({
-      deploymentNotes,
-      t1Notes,
-      t2Notes,
-      t3Notes,
-      t4Notes,
-      t5Notes,
-    });
-
-    const mergedNotesRaw = `${notesBase ?? ""}${timelineBlock}`.trim();
-    const mergedNotes = mergedNotesRaw.length ? mergedNotesRaw : null;
 
     const baseData: any = {
       gameType,
@@ -175,8 +167,8 @@ export async function POST(req: Request) {
       tag1: tag1 ?? undefined,
       tag2: tag2 ?? undefined,
 
-      // ✅ ici on sauvegarde notes + timeline
-      notes: mergedNotes ?? undefined,
+      // ✅ notes post-partie uniquement (sans timeline)
+      notes: notesBase ?? undefined,
 
       myFaction: myFaction ?? undefined,
       myDetachment: myDetachment ?? undefined,
@@ -192,16 +184,53 @@ export async function POST(req: Request) {
       photoUrls,
     };
 
-    // ✅ Tant que la DB n’a pas les colonnes, NE PAS inclure timeline dans data (sinon P2022)
-    void deploymentPhotoUrl;
-    void t1PhotoUrl;
-    void t2PhotoUrl;
-    void t3PhotoUrl;
-    void t4PhotoUrl;
-    void t5PhotoUrl;
+    const fullData: any = {
+      ...baseData,
+      // ✅ Timeline -> colonnes dédiées
+      deploymentNotes: deploymentNotes ?? undefined,
+      t1Notes: t1Notes ?? undefined,
+      t2Notes: t2Notes ?? undefined,
+      t3Notes: t3Notes ?? undefined,
+      t4Notes: t4Notes ?? undefined,
+      t5Notes: t5Notes ?? undefined,
+
+      deploymentPhotoUrl: deploymentPhotoUrl ?? undefined,
+      t1PhotoUrl: t1PhotoUrl ?? undefined,
+      t2PhotoUrl: t2PhotoUrl ?? undefined,
+      t3PhotoUrl: t3PhotoUrl ?? undefined,
+      t4PhotoUrl: t4PhotoUrl ?? undefined,
+      t5PhotoUrl: t5PhotoUrl ?? undefined,
+    };
+
+    try {
+      const game = await prisma.game.create({
+        data: fullData,
+        select: SAFE_SELECT,
+      });
+      return Response.json({ ...game, warning: null }, { status: 201 });
+    } catch (e: any) {
+      if (!isMissingColumnError(e)) throw e;
+    }
+
+    const timelineBlock = buildTimelineNotesBlock({
+      deploymentNotes,
+      t1Notes,
+      t2Notes,
+      t3Notes,
+      t4Notes,
+      t5Notes,
+    });
+
+    const mergedNotesRaw = `${notesBase ?? ""}${timelineBlock}`.trim();
+    const mergedNotes = mergedNotesRaw.length ? mergedNotesRaw : null;
+
+    const fallbackData = {
+      ...baseData,
+      notes: mergedNotes ?? undefined,
+    };
 
     const game = await prisma.game.create({
-      data: baseData,
+      data: fallbackData,
       select: SAFE_SELECT,
     });
 
