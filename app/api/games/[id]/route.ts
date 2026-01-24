@@ -128,3 +128,22 @@ export async function PATCH(req: Request, ctx: { params: any }) {
     );
   }
 }
+
+export async function DELETE(_: Request, ctx: { params: any }) {
+  const id = await getId(ctx.params);
+  if (!id) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+
+  try {
+    const deleted = await prisma.game.delete({
+      where: { id },
+      select: { id: true },
+    });
+    return NextResponse.json({ ok: true, id: deleted.id });
+  } catch (e: any) {
+    console.error("[DELETE /api/games/:id] ERROR", e);
+    return NextResponse.json(
+      { error: "Delete failed", details: String(e?.message ?? e) },
+      { status: 500 }
+    );
+  }
+}
