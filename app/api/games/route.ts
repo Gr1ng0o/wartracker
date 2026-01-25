@@ -69,7 +69,7 @@ function buildTimelineNotesBlock(input: {
  * Tant que la DB n’a pas les colonnes timeline, Prisma ne doit PAS les “RETURN”.
  * Donc on force un select sans les champs timeline.
  */
-const SAFE_SELECT = {
+const SAFE_SELECT_BASE = {
   id: true,
   createdAt: true,
   gameType: true,
@@ -92,11 +92,15 @@ const SAFE_SELECT = {
 
   myArmyPdfUrl: true,
   oppArmyPdfUrl: true,
-  myListText: true,
-  oppListText: true,
   scoreSheetUrl: true,
 
   photoUrls: true,
+} as const;
+
+const SAFE_SELECT_WITH_LIST_TEXT = {
+  ...SAFE_SELECT_BASE,
+  myListText: true,
+  oppListText: true,
 } as const;
 
 export async function POST(req: Request) {
@@ -211,7 +215,7 @@ export async function POST(req: Request) {
     try {
       const game = await prisma.game.create({
         data: fullData,
-        select: SAFE_SELECT,
+        select: SAFE_SELECT_WITH_LIST_TEXT,
       });
       return Response.json({ ...game, warning: null }, { status: 201 });
     } catch (e: any) {
@@ -238,7 +242,7 @@ export async function POST(req: Request) {
     try {
       const game = await prisma.game.create({
         data: fallbackData,
-        select: SAFE_SELECT,
+        select: SAFE_SELECT_WITH_LIST_TEXT,
       });
 
       return Response.json(
@@ -263,7 +267,7 @@ export async function POST(req: Request) {
 
     const game = await prisma.game.create({
       data: fallbackDataWithoutListText,
-      select: SAFE_SELECT,
+      select: SAFE_SELECT_BASE,
     });
 
     return Response.json(
