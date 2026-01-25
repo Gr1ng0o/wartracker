@@ -92,6 +92,8 @@ const SAFE_SELECT = {
 
   myArmyPdfUrl: true,
   oppArmyPdfUrl: true,
+  myListText: true,
+  oppListText: true,
   scoreSheetUrl: true,
 
   photoUrls: true,
@@ -136,6 +138,8 @@ export async function POST(req: Request) {
 
     const myArmyPdfUrl = parseNullableString(body.myArmyPdfUrl);
     const oppArmyPdfUrl = parseNullableString(body.oppArmyPdfUrl);
+    const myListText = parseNullableString(body.myListText);
+    const oppListText = parseNullableString(body.oppListText);
     const scoreSheetUrl = parseNullableString(body.scoreSheetUrl);
 
     const photoUrls = parsePhotoUrls(body.photoUrls);
@@ -179,6 +183,8 @@ export async function POST(req: Request) {
 
       myArmyPdfUrl: myArmyPdfUrl ?? undefined,
       oppArmyPdfUrl: oppArmyPdfUrl ?? undefined,
+      myListText: myListText ?? undefined,
+      oppListText: oppListText ?? undefined,
       scoreSheetUrl: scoreSheetUrl ?? undefined,
 
       photoUrls,
@@ -229,8 +235,34 @@ export async function POST(req: Request) {
       notes: mergedNotes ?? undefined,
     };
 
+    try {
+      const game = await prisma.game.create({
+        data: fallbackData,
+        select: SAFE_SELECT,
+      });
+
+      return Response.json(
+        {
+          ...game,
+          warning:
+            timelineBlock.trim().length > 0
+              ? "DB non migrée: timeline stockée dans notes (bloc WT_TIMELINE_V1)."
+              : null,
+        },
+        { status: 201 }
+      );
+    } catch (e: any) {
+      if (!isMissingColumnError(e)) throw e;
+    }
+
+    const fallbackDataWithoutListText = {
+      ...fallbackData,
+      myListText: undefined,
+      oppListText: undefined,
+    };
+
     const game = await prisma.game.create({
-      data: fallbackData,
+      data: fallbackDataWithoutListText,
       select: SAFE_SELECT,
     });
 
@@ -238,9 +270,7 @@ export async function POST(req: Request) {
       {
         ...game,
         warning:
-          timelineBlock.trim().length > 0
-            ? "DB non migrée: timeline stockée dans notes (bloc WT_TIMELINE_V1)."
-            : null,
+          "DB non migrée: colonnes myListText/oppListText absentes, texte enrichi ignoré.",
       },
       { status: 201 }
     );

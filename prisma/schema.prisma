@@ -30,6 +30,8 @@ model Game {
   scoreSheetUrl      String?
   myArmyPdfUrl       String?
   oppArmyPdfUrl      String?
+  myListText         String?
+  oppListText        String?
   deploymentPhotoUrl String?
   t1PhotoUrl         String?
   t2PhotoUrl         String?
