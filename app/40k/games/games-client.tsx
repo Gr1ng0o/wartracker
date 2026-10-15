@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { GameDTO } from "../types";
+import { formatGameDate } from "@/lib/date";
+import { apiRequest, errorMessage } from "@/lib/client-api";
 
 function badgeClass(result?: string | null) {
   if (result === "W")
@@ -22,21 +24,9 @@ function resultLabel(result?: string | null) {
   return result ?? "—";
 }
 
-function formatDate(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString("fr-FR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function missionLine(g: any) {
+function missionLine(g: GameDTO) {
   const parts = [g.missionPack, g.primaryMission, g.deployment, g.terrainLayout]
-    .map((x: any) => (typeof x === "string" ? x.trim() : ""))
+    .map((x) => (typeof x === "string" ? x.trim() : ""))
     .filter(Boolean);
   return parts.length ? parts.join(" – ") : null;
 }
@@ -58,7 +48,7 @@ export default function GamesOverview40kClient({
     const qq = q.trim().toLowerCase();
     if (!qq) return only40k;
 
-    return only40k.filter((g: any) => {
+    return only40k.filter((g: GameDTO) => {
       const hay = [
         g.opponent,
         typeof g.points === "number" ? String(g.points) : "",
@@ -94,12 +84,10 @@ export default function GamesOverview40kClient({
     const confirmed = confirm("Supprimer définitivement cette partie 40k ?");
     if (!confirmed) return;
 
-    const res = await fetch(`/api/games/${id}`, { method: "DELETE" });
-    if (!res.ok) {
-      alert("Erreur lors de la suppression");
-      return;
-    }
-    router.refresh();
+    try {
+      await apiRequest(`/api/games/${id}`, { method: "DELETE" });
+      router.refresh();
+    } catch (error) { alert(errorMessage(error)); }
   }
 
   return (
@@ -163,8 +151,8 @@ export default function GamesOverview40kClient({
         </div>
 
         <div className="mt-4 grid gap-3">
-          {filtered.map((g: any) => {
-            const dateStr = formatDate(g.playedAt ?? g.createdAt);
+          {filtered.map((g: GameDTO) => {
+            const dateStr = formatGameDate(g.playedAt ?? g.createdAt);
             const scoreLine =
               typeof g.myScore === "number" && typeof g.oppScore === "number"
                 ? `${g.myScore} — ${g.oppScore}`

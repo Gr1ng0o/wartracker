@@ -3,6 +3,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { apiRequest, errorMessage } from "@/lib/client-api";
 
 type Result = "W" | "L" | "D";
 
@@ -142,6 +143,7 @@ export default function Add40kForm() {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (saving) return;
 
     // validations légères MVP (pas bloquantes sauf l’essentiel)
     if (!opponent.trim()) {
@@ -191,7 +193,7 @@ export default function Add40kForm() {
         return;
       }
 
-      const res = await fetch("/api/games", {
+      await apiRequest("/api/games", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -249,34 +251,11 @@ export default function Add40kForm() {
         }),
       });
 
-      if (!res.ok) {
-        let msg = `Erreur serveur (${res.status})`;
-
-        try {
-          const data = await res.json();
-          if (typeof data === "string") {
-            msg += `\n\n${data}`;
-          } else if (data?.error) {
-            msg += `\n\n${data.error}`;
-          } else {
-            msg += `\n\n${JSON.stringify(data, null, 2)}`;
-          }
-        } catch {
-          try {
-            const text = await res.text();
-            if (text) msg += `\n\n${text}`;
-          } catch {
-            msg += `\n\nUne erreur inconnue est survenue.`;
-          }
-        }
-
-        alert(msg);
-        return;
-      }
-
       alert("Partie 40k enregistrée ✅");
       router.push("/40k/games");
       router.refresh();
+    } catch (error) {
+      alert(errorMessage(error));
     } finally {
       setSaving(false);
     }

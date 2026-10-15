@@ -11,6 +11,12 @@ datasource db {
 model Game {
   id                 String   @id @default(cuid())
   createdAt          DateTime @default(now())
+  playedAt           DateTime?
+  points             Int?
+  missionPack        String?
+  primaryMission     String?
+  deployment         String?
+  terrainLayout      String?
   gameType           String
   build              String
   opponent           String

@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Keep production builds within small CI/hosting memory limits.
+  experimental: { cpus: 2 },
 };
 
 export default nextConfig;

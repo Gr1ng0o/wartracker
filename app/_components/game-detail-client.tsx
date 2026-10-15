@@ -4,18 +4,8 @@ import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { GameDTO } from "../types";
-
-function fmtFR(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString("fr-FR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatGameDate } from "@/lib/date";
+import { apiRequest, errorMessage } from "@/lib/client-api";
 
 function badgeClass(result?: string | null) {
   if (result === "W")
@@ -66,7 +56,7 @@ function Pill({ children }: { children: ReactNode }) {
 
 function openExternal(url: string) {
   const u = (url ?? "").trim();
-  if (!u) return;
+  if (!u || !u.startsWith("https://")) return;
   window.open(u, "_blank", "noopener,noreferrer");
 }
 
@@ -176,9 +166,14 @@ type TimelinePayload = {
 
 function safeJsonParseTimeline(s: string): TimelinePayload | null {
   try {
-    const obj = JSON.parse(s);
+    const obj: unknown = JSON.parse(s);
     if (!obj || typeof obj !== "object") return null;
-    return obj as TimelinePayload;
+    const payload: TimelinePayload = {};
+    for (const key of ["deploymentNotes", "t1Notes", "t2Notes", "t3Notes", "t4Notes", "t5Notes"] as const) {
+      const value = (obj as Record<string, unknown>)[key];
+      if (typeof value === "string" || value === null) payload[key] = value;
+    }
+    return payload;
   } catch {
     return null;
   }
@@ -281,13 +276,15 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
     (game.t5Notes ?? legacy.timeline?.t5Notes ?? "") || ""
   );
 
+  const [saved, setSaved] = useState({ notes, scoreSheetUrl, deploymentNotes, t1Notes, t2Notes, t3Notes, t4Notes, t5Notes });
+  const draft = { notes, scoreSheetUrl, deploymentNotes, t1Notes, t2Notes, t3Notes, t4Notes, t5Notes };
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const dateStr = useMemo(() => {
     const iso = game.playedAt || game.createdAt;
-    return fmtFR(iso);
+    return formatGameDate(iso);
   }, [game.playedAt, game.createdAt]);
 
   const missionLine = useMemo(() => {
@@ -326,40 +323,21 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
       return;
     }
 
+    if (saving) return;
+    const snapshot = { ...draft };
     setSaving(true);
     setMsg(null);
-
     try {
-      const res = await fetch(`/api/games/${game.id}`, {
+      await apiRequest(`/api/games/${game.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          // ✅ Notes post-partie uniquement (clean)
-          notes: notes.trim() || null,
-          scoreSheetUrl: scoreSheetUrl.trim() || null,
-
-          // ✅ Timeline -> colonnes dédiées (pas dans notes)
-          deploymentNotes: deploymentNotes.trim() || null,
-          t1Notes: t1Notes.trim() || null,
-          t2Notes: t2Notes.trim() || null,
-          t3Notes: t3Notes.trim() || null,
-          t4Notes: t4Notes.trim() || null,
-          t5Notes: t5Notes.trim() || null,
-        }),
+        body: JSON.stringify(snapshot),
       });
-
-      const payload = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        const txt =
-          payload?.error || payload?.details || JSON.stringify(payload) || `PATCH failed (${res.status})`;
-        throw new Error(txt);
-      }
-
-      // ✅ Si on avait un legacy blob dans notes, maintenant il est nettoyé
-      setMsg("✅ Sauvegardé (timeline dans REMARQUES / AJUSTEMENTS).");
-    } catch (e: any) {
-      setMsg(`❌ ${e?.message ?? "Erreur"}`);
+      setSaved(snapshot);
+      setMsg("Modifications sauvegardées.");
+      router.refresh();
+    } catch (error) {
+      setMsg(errorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -373,33 +351,18 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
     setMsg(null);
 
     try {
-      const res = await fetch(`/api/games/${game.id}`, { method: "DELETE" });
-      const payload = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        const txt =
-          payload?.error || payload?.details || JSON.stringify(payload) || `DELETE failed (${res.status})`;
-        throw new Error(txt);
-      }
+      await apiRequest(`/api/games/${game.id}`, { method: "DELETE" });
 
       router.push("/40k/games");
       router.refresh();
-    } catch (e: any) {
-      setMsg(`❌ ${e?.message ?? "Erreur suppression"}`);
+    } catch (error) {
+      setMsg(errorMessage(error));
     } finally {
       setDeleting(false);
     }
   }
 
-  const hasDirty =
-    (notes ?? "") !== (legacy.cleanNotes ?? "") ||
-    (scoreSheetUrl ?? "") !== (game.scoreSheetUrl ?? "") ||
-    (deploymentNotes ?? "") !== (game.deploymentNotes ?? "") ||
-    (t1Notes ?? "") !== (game.t1Notes ?? "") ||
-    (t2Notes ?? "") !== (game.t2Notes ?? "") ||
-    (t3Notes ?? "") !== (game.t3Notes ?? "") ||
-    (t4Notes ?? "") !== (game.t4Notes ?? "") ||
-    (t5Notes ?? "") !== (game.t5Notes ?? "");
+  const hasDirty = (Object.keys(draft) as Array<keyof typeof draft>).some(key => draft[key] !== saved[key]);
 
   return (
     <main className="relative min-h-screen overflow-hidden text-white">
@@ -577,7 +540,7 @@ export default function GameDetailClient({ game }: { game: GameDTO }) {
 
             {legacy.timeline ? (
               <div className="text-xs text-amber-200/70">
-                ⚠️ Ancienne timeline détectée dans “Notes post-partie” → elle est masquée ici et sera nettoyée après sauvegarde.
+                ⚠️ Les notes d’une ancienne partie ont été récupérées. Sauvegarde pour les conserver dans les sections par tour.
               </div>
             ) : null}
           </section>

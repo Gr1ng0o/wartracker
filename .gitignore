@@ -44,3 +44,9 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# Local databases and backups
+*.db
+*.db-journal
+*.dump
+!/.env.example
