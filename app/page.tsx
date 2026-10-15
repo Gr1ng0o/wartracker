@@ -114,7 +114,7 @@ export default function Home() {
             <GrimLink
               href="/fab"
               title="Flesh and Blood"
-              subtitle="Games • notes • decks (soon)"
+              subtitle="Parties • decks • notes"
               icon="🩸"
             />
           </div>
