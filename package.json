@@ -7,10 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "media:setup": "node --env-file-if-exists=.env.local scripts/setup-media.mjs",
+    "data:reset": "node --env-file-if-exists=.env.local scripts/reset-wartracker.mjs",
+    "test:media": "node --experimental-strip-types --test tests/media-policy.test.mjs tests/media-routes.test.cjs",
+    "db:deploy": "node --env-file-if-exists=.env.local node_modules/prisma/build/index.js migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.19.1",
+    "@supabase/supabase-js": "^2.118.0",
     "@vercel/blob": "^2.0.0",
     "next": "^16.4.2",
     "papaparse": "^5.5.3",

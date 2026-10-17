@@ -1,2 +1,2 @@
-import AddGamePage from "../../add-game/page";
-export default function Page() { return <AddGamePage initialType="FaB" />; }
+import AddGameForm from "../../_components/add-game-form";
+export default function Page(){return <AddGameForm gameType="FaB"/>;}

@@ -80,7 +80,8 @@ export default async function GameDetailPage(ctx: Ctx) {
         ← Retour
       </Link>
 
-      <GameDetailClient game={safeGame} />
+      <Link className="media-detail-link" href={"/media?gameId="+id}>Photos, vidéos et documents de cette partie →</Link>
+        <GameDetailClient game={safeGame} />
     </main>
   );
 }

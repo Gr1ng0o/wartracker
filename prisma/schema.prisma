@@ -9,6 +9,13 @@ datasource db {
 }
 
 model Game {
+  playedAt           DateTime?
+  points             Int?
+  missionPack        String?
+  primaryMission     String?
+  deployment         String?
+  terrainLayout      String?
+  media              Media[]
   id                 String   @id @default(cuid())
   createdAt          DateTime @default(now())
   gameType           String
@@ -44,4 +51,20 @@ model Game {
   t3Notes            String?
   t4Notes            String?
   t5Notes            String?
+}
+
+model Media {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  gameId       String?
+  game         Game?    @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  name         String
+  caption      String   @default("")
+  mimeType     String
+  size         Int
+  path         String   @unique
+  phase        String   @default("general")
+  status       String   @default("pending")
+  @@index([gameId, createdAt])
+  @@index([status, createdAt])
 }
