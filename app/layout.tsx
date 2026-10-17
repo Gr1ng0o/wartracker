@@ -1,44 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "WarTracker",
-  description: "Track Warhammer 40k & Flesh and Blood games",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen`}>
-        {/* ✅ Background image (NE CAPTE PAS LES CLICS) */}
-        <div
-          className="pointer-events-none fixed inset-0 -z-10 bg-center bg-cover bg-fixed"
-          style={{ backgroundImage: "url('/background.png')" }}
-        />
-
-        {/* ✅ Dark overlay (NE CAPTE PAS LES CLICS) */}
-        <div className="pointer-events-none fixed inset-0 -z-10 bg-black/60" />
-
-        {/* ✅ App content (CLICABLE) */}
-        <div className="relative z-10 min-h-screen">
-          {children}
-        </div>
-      </body>
-    </html>
-  );
+export const metadata: Metadata = { title: { default: "WarTracker — Archives de guerre", template: "%s | WarTracker" }, description: "Tes chroniques de bataille Warhammer 40,000 et Flesh and Blood. Consigne, analyse et progresse." };
+export default function RootLayout({children}: Readonly<{children: React.ReactNode}>) {
+ return <html lang="fr"><body><a className="skip-link" href="#content">Aller au contenu</a><header className="site-header"><Link className="site-brand" href="/" aria-label="WarTracker, accueil">✣ WARTRACKER</Link><nav aria-label="Navigation principale"><Link href="/40k">Warhammer 40k</Link><Link href="/fab">Flesh and Blood</Link><Link href="/games">Historique</Link></nav></header><div id="content" className="site-content">{children}</div><footer className="site-footer"><span>WARTRACKER / ARCHIVES DE GUERRE</span><span>Consigner. Comprendre. Vaincre.</span></footer></body></html>;
 }

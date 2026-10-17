@@ -292,12 +292,12 @@ export default function Add40kForm() {
       </div>
 
       <div className="relative mx-auto flex min-h-screen max-w-4xl items-start px-6 py-14">
-        <div className="w-full rounded-[28px] border border-white/10 bg-black/55 p-8 shadow-[0_30px_120px_rgba(0,0,0,0.85)] backdrop-blur-md">
+        <div className="w-full rounded-sm border border-stone-700 bg-black/55 p-8 shadow-[0_30px_120px_rgba(0,0,0,0.85)] ">
           {/* Header */}
           <div className="flex items-center justify-between gap-4">
             <Link
               href="/40k/games"
-              className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm text-white/90 hover:bg-white/15 transition"
+              className="rounded-full border border-stone-700 bg-white/10 px-4 py-2 text-sm text-stone-100 hover:bg-white/15 transition"
             >
               ← Retour 40k
             </Link>
@@ -306,11 +306,11 @@ export default function Add40kForm() {
               <button
                 type="button"
                 onClick={resetForm}
-                className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm text-white/80 hover:bg-white/15 transition"
+                className="rounded-full border border-stone-700 bg-white/10 px-4 py-2 text-sm text-stone-100 hover:bg-white/15 transition"
               >
                 Reset
               </button>
-              <div className="hidden sm:block text-[10px] tracking-[0.35em] text-white/35">
+              <div className="hidden sm:block text-[10px] tracking-[0.35em] text-stone-400">
                 ADD • GAME • LOG
               </div>
             </div>
@@ -320,13 +320,13 @@ export default function Add40kForm() {
           <div className="mt-6">
             <h1
               className="
-                text-4xl sm:text-5xl font-extrabold
+                text-4xl sm:text-5xl font-normal
                 tracking-[0.04em]
-                text-white
+                text-stone-100
                 drop-shadow-[0_4px_18px_rgba(0,0,0,0.85)]
               "
             >
-              <span className="block text-xs tracking-[0.45em] text-white/40 mb-2">
+              <span className="block text-xs tracking-[0.45em] text-stone-400 mb-2">
                 WARTRACKER
               </span>
               AJOUTER UNE PARTIE • 40K
@@ -334,35 +334,35 @@ export default function Add40kForm() {
 
             <div className="mt-4 h-px w-56 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
-            <div className="mt-3 text-sm text-white/60">
+            <div className="mt-3 text-sm text-stone-100/60">
               Résultat détecté via score :{" "}
-              <span className="font-semibold text-white">{resultLabel}</span>
+              <span className="font-semibold text-stone-100">{resultLabel}</span>
             </div>
           </div>
 
           {/* Form */}
           <form onSubmit={onSubmit} className="mt-8 space-y-7">
             {/* SECTION 1 — Identification */}
-            <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="text-xs tracking-[0.35em] text-white/35">
+            <section className="rounded-sm border border-stone-700 bg-black/40 p-5">
+              <div className="text-xs tracking-[0.35em] text-stone-400">
                 IDENTIFICATION
               </div>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">
+                  <span className="text-sm font-semibold text-stone-100">
                     Date
                   </span>
                   <input
                     type="datetime-local"
                     value={playedAtLocal}
                     onChange={(e) => setPlayedAtLocal(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                    className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   />
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">
+                  <span className="text-sm font-semibold text-stone-100">
                     Format (points)
                   </span>
                   <select
@@ -370,7 +370,7 @@ export default function Add40kForm() {
                     onChange={(e) =>
                       setPoints(Number(e.target.value) as 1000 | 1500 | 2000)
                     }
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                    className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   >
                     <option value={1000}>1000</option>
                     <option value={1500}>1500</option>
@@ -379,11 +379,11 @@ export default function Add40kForm() {
                 </label>
 
                 <label className="space-y-2 sm:col-span-2">
-                  <span className="text-sm font-semibold text-white/80">
+                  <span className="text-sm font-semibold text-stone-100">
                     Adversaire (nom / pseudo)
                   </span>
                   <input
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                    className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                     value={opponent}
                     onChange={(e) => setOpponent(e.target.value)}
                     placeholder="ex : Kévin / OrkBoss92"
@@ -394,23 +394,23 @@ export default function Add40kForm() {
             </section>
 
             {/* SECTION 2 — Mission & table */}
-            <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
+            <section className="rounded-sm border border-stone-700 bg-black/40 p-5">
               <div className="flex items-center justify-between gap-3">
-                <div className="text-xs tracking-[0.35em] text-white/35">
+                <div className="text-xs tracking-[0.35em] text-stone-400">
                   MISSION & TABLE
                 </div>
-                <div className="text-[11px] text-white/40">
+                <div className="text-[11px] text-stone-400">
                   Référence : Leviathan – Take and Hold – Hammer and Anvil – GW Layout 4
                 </div>
               </div>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">
+                  <span className="text-sm font-semibold text-stone-100">
                     Pack de mission
                   </span>
                   <input
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                    className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                     value={missionPack}
                     onChange={(e) => setMissionPack(e.target.value)}
                     placeholder="Leviathan / Pariah Nexus / Core"
@@ -418,11 +418,11 @@ export default function Add40kForm() {
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">
+                  <span className="text-sm font-semibold text-stone-100">
                     Mission primaire
                   </span>
                   <input
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                    className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                     value={primaryMission}
                     onChange={(e) => setPrimaryMission(e.target.value)}
                     placeholder="Take and Hold"
@@ -430,11 +430,11 @@ export default function Add40kForm() {
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">
+                  <span className="text-sm font-semibold text-stone-100">
                     Déploiement
                   </span>
                   <input
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                    className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                     value={deployment}
                     onChange={(e) => setDeployment(e.target.value)}
                     placeholder="Hammer and Anvil"
@@ -442,11 +442,11 @@ export default function Add40kForm() {
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">
+                  <span className="text-sm font-semibold text-stone-100">
                     Layout terrain
                   </span>
                   <input
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                    className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                     value={terrainLayout}
                     onChange={(e) => setTerrainLayout(e.target.value)}
                     placeholder="GW Layout 4 / Custom – Standard"
@@ -456,27 +456,27 @@ export default function Add40kForm() {
             </section>
 
             {/* SECTION 3 — Armées */}
-            <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="text-xs tracking-[0.35em] text-white/35">
+            <section className="rounded-sm border border-stone-700 bg-black/40 p-5">
+              <div className="text-xs tracking-[0.35em] text-stone-400">
                 ARMÉES
               </div>
-              <div className="mt-2 text-xs text-white/45">
+              <div className="mt-2 text-xs text-stone-400">
                 Le PDF (Drive) fait foi si présent. Le texte est un enrichissement.
               </div>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {/* Toi */}
-                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-                  <div className="text-xs tracking-[0.25em] text-white/35">
+                <div className="rounded-sm border border-stone-700 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-stone-400">
                     TOI
                   </div>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">
+                    <span className="text-sm font-semibold text-stone-100">
                       Faction
                     </span>
                     <input
-                      className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                      className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       value={myFaction}
                       onChange={(e) => setMyFaction(e.target.value)}
                       placeholder="Ultramarines"
@@ -484,11 +484,11 @@ export default function Add40kForm() {
                   </label>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">
+                    <span className="text-sm font-semibold text-stone-100">
                       Détachement
                     </span>
                     <input
-                      className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                      className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       value={myDetachment}
                       onChange={(e) => setMyDetachment(e.target.value)}
                       placeholder="Gladius Task Force"
@@ -496,21 +496,21 @@ export default function Add40kForm() {
                   </label>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">
+                    <span className="text-sm font-semibold text-stone-100">
                       PDF liste (Drive)
                     </span>
                     <input
-                      className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                      className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       value={myArmyPdfUrl}
                       onChange={(e) => setMyArmyPdfUrl(e.target.value)}
                       placeholder="https://drive.google.com/file/d/..."
                     />
-                    <span className="text-[11px] text-white/45">
+                    <span className="text-[11px] text-stone-400">
                       Astuce : partage “Toute personne ayant le lien” (lecture).
                     </span>
                     {myArmyPdfUrl.trim() ? (
                       <a
-                        className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                        className="inline-block text-xs underline text-stone-100/70 hover:text-stone-100 transition"
                         href={myArmyPdfUrl}
                         target="_blank"
                         rel="noreferrer"
@@ -518,18 +518,18 @@ export default function Add40kForm() {
                         📄 Ouvrir le PDF
                       </a>
                     ) : (
-                      <span className="block text-[11px] text-white/45">
+                      <span className="block text-[11px] text-stone-400">
                         Optionnel
                       </span>
                     )}
                   </label>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">
+                    <span className="text-sm font-semibold text-stone-100">
                       Texte enrichi (optionnel)
                     </span>
                     <textarea
-                      className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                      className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       rows={3}
                       value={myListText}
                       onChange={(e) => setMyListText(e.target.value)}
@@ -539,17 +539,17 @@ export default function Add40kForm() {
                 </div>
 
                 {/* Adversaire */}
-                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-                  <div className="text-xs tracking-[0.25em] text-white/35">
+                <div className="rounded-sm border border-stone-700 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-stone-400">
                     ADVERSAIRE
                   </div>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">
+                    <span className="text-sm font-semibold text-stone-100">
                       Faction
                     </span>
                     <input
-                      className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                      className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       value={oppFaction}
                       onChange={(e) => setOppFaction(e.target.value)}
                       placeholder="Orks"
@@ -557,11 +557,11 @@ export default function Add40kForm() {
                   </label>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">
+                    <span className="text-sm font-semibold text-stone-100">
                       Détachement (optionnel)
                     </span>
                     <input
-                      className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                      className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       value={oppDetachment}
                       onChange={(e) => setOppDetachment(e.target.value)}
                       placeholder="Bully Boyz"
@@ -569,18 +569,18 @@ export default function Add40kForm() {
                   </label>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">
+                    <span className="text-sm font-semibold text-stone-100">
                       PDF liste (Drive)
                     </span>
                     <input
-                      className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                      className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       value={oppArmyPdfUrl}
                       onChange={(e) => setOppArmyPdfUrl(e.target.value)}
                       placeholder="https://drive.google.com/file/d/..."
                     />
                     {oppArmyPdfUrl.trim() ? (
                       <a
-                        className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                        className="inline-block text-xs underline text-stone-100/70 hover:text-stone-100 transition"
                         href={oppArmyPdfUrl}
                         target="_blank"
                         rel="noreferrer"
@@ -588,18 +588,18 @@ export default function Add40kForm() {
                         📄 Ouvrir le PDF
                       </a>
                     ) : (
-                      <span className="block text-[11px] text-white/45">
+                      <span className="block text-[11px] text-stone-400">
                         Optionnel
                       </span>
                     )}
                   </label>
 
                   <label className="mt-3 block space-y-2">
-                    <span className="text-sm font-semibold text-white/80">
+                    <span className="text-sm font-semibold text-stone-100">
                       Texte enrichi (optionnel)
                     </span>
                     <textarea
-                      className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                      className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                       rows={3}
                       value={oppListText}
                       onChange={(e) => setOppListText(e.target.value)}
@@ -611,19 +611,19 @@ export default function Add40kForm() {
             </section>
 
             {/* SECTION 4 — Score & résultat */}
-            <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="text-xs tracking-[0.35em] text-white/35">
+            <section className="rounded-sm border border-stone-700 bg-black/40 p-5">
+              <div className="text-xs tracking-[0.35em] text-stone-400">
                 SCORE & RÉSULTAT
               </div>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">
+                  <span className="text-sm font-semibold text-stone-100">
                     Score final — toi
                   </span>
                   <input
                     type="number"
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                    className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                     value={myScore}
                     onChange={(e) => setMyScore(Number(e.target.value || 0))}
                     min={0}
@@ -631,30 +631,30 @@ export default function Add40kForm() {
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-white/80">
+                  <span className="text-sm font-semibold text-stone-100">
                     Score final — adversaire
                   </span>
                   <input
                     type="number"
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                    className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                     value={oppScore}
                     onChange={(e) => setOppScore(Number(e.target.value || 0))}
                     min={0}
                   />
                 </label>
 
-                <div className="rounded-xl border border-white/10 bg-black/50 p-4 sm:col-span-2">
-                  <div className="text-xs tracking-[0.25em] text-white/35">
+                <div className="rounded-xl border border-stone-700 bg-black/50 p-4 sm:col-span-2">
+                  <div className="text-xs tracking-[0.25em] text-stone-400">
                     RÉSULTAT AUTO
                   </div>
-                  <div className="mt-2 text-lg font-bold text-white">
+                  <div className="mt-2 text-lg font-bold text-stone-100">
                     {computedResult === "D"
                       ? "⚖️ Égalité"
                       : computedResult === "W"
                       ? "✅ Victoire"
                       : "❌ Défaite"}
                   </div>
-                  <div className="mt-1 text-xs text-white/45">
+                  <div className="mt-1 text-xs text-stone-400">
                     Basé sur le score {myScore} - {oppScore} (enregistré aussi dans la DB)
                   </div>
                 </div>
@@ -662,27 +662,27 @@ export default function Add40kForm() {
             </section>
 
             {/* SECTION 4bis — Feuille de score */}
-            <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="text-xs tracking-[0.35em] text-white/35">
+            <section className="rounded-sm border border-stone-700 bg-black/40 p-5">
+              <div className="text-xs tracking-[0.35em] text-stone-400">
                 FEUILLE DE SCORE (DRIVE)
               </div>
-              <div className="mt-2 text-xs text-white/45">
+              <div className="mt-2 text-xs text-stone-400">
                 Lien Google Drive vers un PDF ou une photo de la feuille finale (optionnel).
               </div>
 
               <label className="mt-4 block space-y-2">
-                <span className="text-sm font-semibold text-white/80">
+                <span className="text-sm font-semibold text-stone-100">
                   Lien feuille de score
                 </span>
                 <input
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   value={scoreSheetUrl}
                   onChange={(e) => setScoreSheetUrl(e.target.value)}
                   placeholder="https://drive.google.com/file/d/..."
                 />
                 {scoreSheetUrl.trim() ? (
                   <a
-                    className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                    className="inline-block text-xs underline text-stone-100/70 hover:text-stone-100 transition"
                     href={scoreSheetUrl}
                     target="_blank"
                     rel="noreferrer"
@@ -690,7 +690,7 @@ export default function Add40kForm() {
                     🧾 Ouvrir la feuille de score
                   </a>
                 ) : (
-                  <span className="block text-[11px] text-white/45">
+                  <span className="block text-[11px] text-stone-400">
                     Optionnel
                   </span>
                 )}
@@ -698,17 +698,17 @@ export default function Add40kForm() {
             </section>
 
             {/* SECTION 5 — Notes */}
-            <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="text-xs tracking-[0.35em] text-white/35">
+            <section className="rounded-sm border border-stone-700 bg-black/40 p-5">
+              <div className="text-xs tracking-[0.35em] text-stone-400">
                 NOTES / AMÉLIORATIONS
               </div>
 
               <label className="mt-4 block space-y-2">
-                <span className="text-sm font-semibold text-white/80">
+                <span className="text-sm font-semibold text-stone-100">
                   Notes post-partie
                 </span>
                 <textarea
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   rows={5}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -718,31 +718,31 @@ export default function Add40kForm() {
             </section>
 
             {/* ✅ SECTION 6 — Timeline (photos + notes par tour) */}
-            <section className="rounded-2xl border border-white/10 bg-black/40 p-5">
-              <div className="text-xs tracking-[0.35em] text-white/35">
+            <section className="rounded-sm border border-stone-700 bg-black/40 p-5">
+              <div className="text-xs tracking-[0.35em] text-stone-400">
                 TIMELINE (TOUR PAR TOUR)
               </div>
-              <div className="mt-2 text-xs text-white/45">
+              <div className="mt-2 text-xs text-stone-400">
                 Ajoute un lien Drive (photo) et tes remarques/ajustements par tour. Tout est optionnel.
               </div>
 
               <div className="mt-5 space-y-5">
                 {/* Déploiement */}
-                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-                  <div className="text-xs tracking-[0.25em] text-white/35">DÉPLOIEMENT</div>
+                <div className="rounded-sm border border-stone-700 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-stone-400">DÉPLOIEMENT</div>
 
                   <div className="mt-3 grid gap-4 sm:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-sm font-semibold text-white/80">Photo (Drive)</span>
+                      <span className="text-sm font-semibold text-stone-100">Photo (Drive)</span>
                       <input
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                         value={deploymentPhotoUrl}
                         onChange={(e) => setDeploymentPhotoUrl(e.target.value)}
                         placeholder="https://drive.google.com/file/d/..."
                       />
                       {deploymentPhotoUrl.trim() ? (
                         <a
-                          className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                          className="inline-block text-xs underline text-stone-100/70 hover:text-stone-100 transition"
                           href={deploymentPhotoUrl}
                           target="_blank"
                           rel="noreferrer"
@@ -750,14 +750,14 @@ export default function Add40kForm() {
                           📷 Ouvrir
                         </a>
                       ) : (
-                        <span className="block text-[11px] text-white/45">Optionnel</span>
+                        <span className="block text-[11px] text-stone-400">Optionnel</span>
                       )}
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-sm font-semibold text-white/80">Remarques / ajustements</span>
+                      <span className="text-sm font-semibold text-stone-100">Remarques / ajustements</span>
                       <textarea
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                         rows={3}
                         value={deploymentNotes}
                         onChange={(e) => setDeploymentNotes(e.target.value)}
@@ -768,21 +768,21 @@ export default function Add40kForm() {
                 </div>
 
                 {/* T1 */}
-                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-                  <div className="text-xs tracking-[0.25em] text-white/35">T1</div>
+                <div className="rounded-sm border border-stone-700 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-stone-400">T1</div>
 
                   <div className="mt-3 grid gap-4 sm:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-sm font-semibold text-white/80">Photo (Drive)</span>
+                      <span className="text-sm font-semibold text-stone-100">Photo (Drive)</span>
                       <input
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                         value={t1PhotoUrl}
                         onChange={(e) => setT1PhotoUrl(e.target.value)}
                         placeholder="https://drive.google.com/file/d/..."
                       />
                       {t1PhotoUrl.trim() ? (
                         <a
-                          className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                          className="inline-block text-xs underline text-stone-100/70 hover:text-stone-100 transition"
                           href={t1PhotoUrl}
                           target="_blank"
                           rel="noreferrer"
@@ -790,14 +790,14 @@ export default function Add40kForm() {
                           📷 Ouvrir
                         </a>
                       ) : (
-                        <span className="block text-[11px] text-white/45">Optionnel</span>
+                        <span className="block text-[11px] text-stone-400">Optionnel</span>
                       )}
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-sm font-semibold text-white/80">Remarques / ajustements</span>
+                      <span className="text-sm font-semibold text-stone-100">Remarques / ajustements</span>
                       <textarea
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                         rows={3}
                         value={t1Notes}
                         onChange={(e) => setT1Notes(e.target.value)}
@@ -808,21 +808,21 @@ export default function Add40kForm() {
                 </div>
 
                 {/* T2 */}
-                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-                  <div className="text-xs tracking-[0.25em] text-white/35">T2</div>
+                <div className="rounded-sm border border-stone-700 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-stone-400">T2</div>
 
                   <div className="mt-3 grid gap-4 sm:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-sm font-semibold text-white/80">Photo (Drive)</span>
+                      <span className="text-sm font-semibold text-stone-100">Photo (Drive)</span>
                       <input
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                         value={t2PhotoUrl}
                         onChange={(e) => setT2PhotoUrl(e.target.value)}
                         placeholder="https://drive.google.com/file/d/..."
                       />
                       {t2PhotoUrl.trim() ? (
                         <a
-                          className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                          className="inline-block text-xs underline text-stone-100/70 hover:text-stone-100 transition"
                           href={t2PhotoUrl}
                           target="_blank"
                           rel="noreferrer"
@@ -830,14 +830,14 @@ export default function Add40kForm() {
                           📷 Ouvrir
                         </a>
                       ) : (
-                        <span className="block text-[11px] text-white/45">Optionnel</span>
+                        <span className="block text-[11px] text-stone-400">Optionnel</span>
                       )}
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-sm font-semibold text-white/80">Remarques / ajustements</span>
+                      <span className="text-sm font-semibold text-stone-100">Remarques / ajustements</span>
                       <textarea
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                         rows={3}
                         value={t2Notes}
                         onChange={(e) => setT2Notes(e.target.value)}
@@ -848,21 +848,21 @@ export default function Add40kForm() {
                 </div>
 
                 {/* T3 */}
-                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-                  <div className="text-xs tracking-[0.25em] text-white/35">T3</div>
+                <div className="rounded-sm border border-stone-700 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-stone-400">T3</div>
 
                   <div className="mt-3 grid gap-4 sm:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-sm font-semibold text-white/80">Photo (Drive)</span>
+                      <span className="text-sm font-semibold text-stone-100">Photo (Drive)</span>
                       <input
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                         value={t3PhotoUrl}
                         onChange={(e) => setT3PhotoUrl(e.target.value)}
                         placeholder="https://drive.google.com/file/d/..."
                       />
                       {t3PhotoUrl.trim() ? (
                         <a
-                          className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                          className="inline-block text-xs underline text-stone-100/70 hover:text-stone-100 transition"
                           href={t3PhotoUrl}
                           target="_blank"
                           rel="noreferrer"
@@ -870,14 +870,14 @@ export default function Add40kForm() {
                           📷 Ouvrir
                         </a>
                       ) : (
-                        <span className="block text-[11px] text-white/45">Optionnel</span>
+                        <span className="block text-[11px] text-stone-400">Optionnel</span>
                       )}
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-sm font-semibold text-white/80">Remarques / ajustements</span>
+                      <span className="text-sm font-semibold text-stone-100">Remarques / ajustements</span>
                       <textarea
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                         rows={3}
                         value={t3Notes}
                         onChange={(e) => setT3Notes(e.target.value)}
@@ -888,21 +888,21 @@ export default function Add40kForm() {
                 </div>
 
                 {/* T4 */}
-                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-                  <div className="text-xs tracking-[0.25em] text-white/35">T4</div>
+                <div className="rounded-sm border border-stone-700 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-stone-400">T4</div>
 
                   <div className="mt-3 grid gap-4 sm:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-sm font-semibold text-white/80">Photo (Drive)</span>
+                      <span className="text-sm font-semibold text-stone-100">Photo (Drive)</span>
                       <input
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                         value={t4PhotoUrl}
                         onChange={(e) => setT4PhotoUrl(e.target.value)}
                         placeholder="https://drive.google.com/file/d/..."
                       />
                       {t4PhotoUrl.trim() ? (
                         <a
-                          className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                          className="inline-block text-xs underline text-stone-100/70 hover:text-stone-100 transition"
                           href={t4PhotoUrl}
                           target="_blank"
                           rel="noreferrer"
@@ -910,14 +910,14 @@ export default function Add40kForm() {
                           📷 Ouvrir
                         </a>
                       ) : (
-                        <span className="block text-[11px] text-white/45">Optionnel</span>
+                        <span className="block text-[11px] text-stone-400">Optionnel</span>
                       )}
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-sm font-semibold text-white/80">Remarques / ajustements</span>
+                      <span className="text-sm font-semibold text-stone-100">Remarques / ajustements</span>
                       <textarea
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                         rows={3}
                         value={t4Notes}
                         onChange={(e) => setT4Notes(e.target.value)}
@@ -928,21 +928,21 @@ export default function Add40kForm() {
                 </div>
 
                 {/* T5 */}
-                <div className="rounded-2xl border border-white/10 bg-black/35 p-4">
-                  <div className="text-xs tracking-[0.25em] text-white/35">T5</div>
+                <div className="rounded-sm border border-stone-700 bg-black/35 p-4">
+                  <div className="text-xs tracking-[0.25em] text-stone-400">T5</div>
 
                   <div className="mt-3 grid gap-4 sm:grid-cols-2">
                     <label className="space-y-2">
-                      <span className="text-sm font-semibold text-white/80">Photo (Drive)</span>
+                      <span className="text-sm font-semibold text-stone-100">Photo (Drive)</span>
                       <input
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                         value={t5PhotoUrl}
                         onChange={(e) => setT5PhotoUrl(e.target.value)}
                         placeholder="https://drive.google.com/file/d/..."
                       />
                       {t5PhotoUrl.trim() ? (
                         <a
-                          className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                          className="inline-block text-xs underline text-stone-100/70 hover:text-stone-100 transition"
                           href={t5PhotoUrl}
                           target="_blank"
                           rel="noreferrer"
@@ -950,14 +950,14 @@ export default function Add40kForm() {
                           📷 Ouvrir
                         </a>
                       ) : (
-                        <span className="block text-[11px] text-white/45">Optionnel</span>
+                        <span className="block text-[11px] text-stone-400">Optionnel</span>
                       )}
                     </label>
 
                     <label className="space-y-2">
-                      <span className="text-sm font-semibold text-white/80">Remarques / ajustements</span>
+                      <span className="text-sm font-semibold text-stone-100">Remarques / ajustements</span>
                       <textarea
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                        className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                         rows={3}
                         value={t5Notes}
                         onChange={(e) => setT5Notes(e.target.value)}
@@ -974,9 +974,9 @@ export default function Add40kForm() {
               disabled={saving}
               className="
                 mt-2 w-full rounded-xl
-                border border-white/10
+                border border-stone-700
                 bg-white/10 px-4 py-3
-                font-semibold text-white
+                font-semibold text-stone-100
                 shadow-[0_14px_40px_rgba(0,0,0,0.6)]
                 transition hover:bg-white/15
                 disabled:opacity-50
@@ -987,7 +987,7 @@ export default function Add40kForm() {
           </form>
 
           <div className="mt-10 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          <div className="mt-4 text-center text-xs text-white/35">
+          <div className="mt-4 text-center text-xs text-stone-400">
             Record the battle. Learn the pattern.
           </div>
         </div>

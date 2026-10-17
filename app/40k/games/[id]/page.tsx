@@ -55,7 +55,7 @@ function strOrNull(x: any): string | null {
 export default async function GameDetailPage({
   params,
 }: {
-  params: { id: string } | Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 }) {
   const id = await getId(params);
   if (!id) notFound();
@@ -216,15 +216,15 @@ export default async function GameDetailPage({
           border border-white/15
           bg-black/80
           px-4 py-2
-          text-sm font-semibold text-white
+          text-sm font-semibold text-stone-100
           shadow-[0_12px_40px_rgba(0,0,0,0.85)]
-          backdrop-blur
+
           hover:bg-black/90
           hover:border-amber-200/30
           transition
         "
       >
-        <span className="text-white/80">←</span>
+        <span className="text-stone-100">←</span>
         <span>Historique 40k</span>
       </Link>
 

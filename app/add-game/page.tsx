@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 
-export default function AddGamePage() {
-  const [gameType, setGameType] = useState<"40k" | "FaB">("40k");
+export default function AddGamePage({ initialType = "40k" }: { initialType?: "40k" | "FaB" }) {
+  const [gameType, setGameType] = useState<"40k" | "FaB">(initialType);
   const [build, setBuild] = useState("");
   const [opponent, setOpponent] = useState("");
   const [first, setFirst] = useState(true);
@@ -142,17 +142,17 @@ export default function AddGamePage() {
       </div>
 
       <div className="relative mx-auto flex min-h-screen max-w-4xl items-start px-6 py-14">
-        <div className="w-full rounded-[28px] border border-white/10 bg-black/55 p-8 shadow-[0_30px_120px_rgba(0,0,0,0.85)] backdrop-blur-md">
+        <div className="w-full rounded-sm border border-stone-700 bg-black/55 p-8 shadow-[0_30px_120px_rgba(0,0,0,0.85)] ">
           {/* Header */}
           <div className="flex items-center justify-between gap-4">
             <Link
-              href="/40k"
-              className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm text-white/90 hover:bg-white/15 transition"
+              href={gameType === "40k" ? "/40k" : "/fab"}
+              className="rounded-full border border-stone-700 bg-white/10 px-4 py-2 text-sm text-stone-100 hover:bg-white/15 transition"
             >
-              ← Retour 40k
+              ← Retour
             </Link>
 
-            <div className="hidden sm:block text-[10px] tracking-[0.35em] text-white/35">
+            <div className="hidden sm:block text-[10px] tracking-[0.35em] text-stone-400">
               ADD • GAME • LOG
             </div>
           </div>
@@ -161,13 +161,13 @@ export default function AddGamePage() {
           <div className="mt-6">
             <h1
               className="
-                text-4xl sm:text-5xl font-extrabold
+                text-4xl sm:text-5xl font-normal
                 tracking-[0.04em]
-                text-white
+                text-stone-100
                 drop-shadow-[0_4px_18px_rgba(0,0,0,0.85)]
               "
             >
-              <span className="block text-xs tracking-[0.45em] text-white/40 mb-2">
+              <span className="block text-xs tracking-[0.45em] text-stone-400 mb-2">
                 WARTRACKER
               </span>
               AJOUTER UNE PARTIE
@@ -180,9 +180,9 @@ export default function AddGamePage() {
             <div className="grid gap-4 sm:grid-cols-2">
               {/* Game type */}
               <label className="space-y-2">
-                <span className="text-sm font-semibold text-white/80">Jeu</span>
+                <span className="text-sm font-semibold text-stone-100">Jeu</span>
                 <select
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   value={gameType}
                   onChange={(e) => {
                     const t = e.target.value as "40k" | "FaB";
@@ -197,9 +197,9 @@ export default function AddGamePage() {
 
               {/* Result */}
               <label className="space-y-2">
-                <span className="text-sm font-semibold text-white/80">Résultat</span>
+                <span className="text-sm font-semibold text-stone-100">Résultat</span>
                 <select
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   value={result}
                   onChange={(e) => setResult(e.target.value as "W" | "L")}
                 >
@@ -210,9 +210,9 @@ export default function AddGamePage() {
 
               {/* Build */}
               <label className="space-y-2 sm:col-span-2">
-                <span className="text-sm font-semibold text-white/80">Build / Deck</span>
+                <span className="text-sm font-semibold text-stone-100">Build / Deck</span>
                 <input
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   value={build}
                   onChange={(e) => setBuild(e.target.value)}
                   placeholder="Ultramarines v1 / Ira v2"
@@ -222,9 +222,9 @@ export default function AddGamePage() {
 
               {/* Opponent */}
               <label className="space-y-2 sm:col-span-2">
-                <span className="text-sm font-semibold text-white/80">Adversaire</span>
+                <span className="text-sm font-semibold text-stone-100">Adversaire</span>
                 <input
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   value={opponent}
                   onChange={(e) => setOpponent(e.target.value)}
                   placeholder="Orks / Bravo"
@@ -234,9 +234,9 @@ export default function AddGamePage() {
 
               {/* First */}
               <label className="space-y-2">
-                <span className="text-sm font-semibold text-white/80">Initiative</span>
+                <span className="text-sm font-semibold text-stone-100">Initiative</span>
                 <select
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   value={first ? "first" : "second"}
                   onChange={(e) => setFirst(e.target.value === "first")}
                 >
@@ -247,9 +247,9 @@ export default function AddGamePage() {
 
               {/* Score */}
               <label className="space-y-2">
-                <span className="text-sm font-semibold text-white/80">Score</span>
+                <span className="text-sm font-semibold text-stone-100">Score</span>
                 <input
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   value={score}
                   onChange={(e) => setScore(e.target.value)}
                   placeholder="40k: +12 / FaB: 6"
@@ -258,18 +258,18 @@ export default function AddGamePage() {
 
               {/* Tags */}
               <label className="space-y-2">
-                <span className="text-sm font-semibold text-white/80">Tag 1</span>
+                <span className="text-sm font-semibold text-stone-100">Tag 1</span>
                 <input
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   value={tag1}
                   onChange={(e) => setTag1(e.target.value)}
                 />
               </label>
 
               <label className="space-y-2">
-                <span className="text-sm font-semibold text-white/80">Tag 2</span>
+                <span className="text-sm font-semibold text-stone-100">Tag 2</span>
                 <input
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   value={tag2}
                   onChange={(e) => setTag2(e.target.value)}
                 />
@@ -277,9 +277,9 @@ export default function AddGamePage() {
 
               {/* Notes */}
               <label className="space-y-2 sm:col-span-2">
-                <span className="text-sm font-semibold text-white/80">Notes</span>
+                <span className="text-sm font-semibold text-stone-100">Notes</span>
                 <textarea
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -289,9 +289,9 @@ export default function AddGamePage() {
 
               {/* ✅ Timeline notes */}
               <label className="space-y-2 sm:col-span-2">
-                <span className="text-sm font-semibold text-white/80">Déploiement (notes)</span>
+                <span className="text-sm font-semibold text-stone-100">Déploiement (notes)</span>
                 <textarea
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   rows={3}
                   value={deploymentNotes}
                   onChange={(e) => setDeploymentNotes(e.target.value)}
@@ -300,9 +300,9 @@ export default function AddGamePage() {
               </label>
 
               <label className="space-y-2 sm:col-span-2">
-                <span className="text-sm font-semibold text-white/80">T1</span>
+                <span className="text-sm font-semibold text-stone-100">T1</span>
                 <textarea
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   rows={3}
                   value={t1Notes}
                   onChange={(e) => setT1Notes(e.target.value)}
@@ -310,9 +310,9 @@ export default function AddGamePage() {
               </label>
 
               <label className="space-y-2 sm:col-span-2">
-                <span className="text-sm font-semibold text-white/80">T2</span>
+                <span className="text-sm font-semibold text-stone-100">T2</span>
                 <textarea
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   rows={3}
                   value={t2Notes}
                   onChange={(e) => setT2Notes(e.target.value)}
@@ -320,9 +320,9 @@ export default function AddGamePage() {
               </label>
 
               <label className="space-y-2 sm:col-span-2">
-                <span className="text-sm font-semibold text-white/80">T3</span>
+                <span className="text-sm font-semibold text-stone-100">T3</span>
                 <textarea
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   rows={3}
                   value={t3Notes}
                   onChange={(e) => setT3Notes(e.target.value)}
@@ -330,9 +330,9 @@ export default function AddGamePage() {
               </label>
 
               <label className="space-y-2 sm:col-span-2">
-                <span className="text-sm font-semibold text-white/80">T4</span>
+                <span className="text-sm font-semibold text-stone-100">T4</span>
                 <textarea
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   rows={3}
                   value={t4Notes}
                   onChange={(e) => setT4Notes(e.target.value)}
@@ -340,9 +340,9 @@ export default function AddGamePage() {
               </label>
 
               <label className="space-y-2 sm:col-span-2">
-                <span className="text-sm font-semibold text-white/80">T5</span>
+                <span className="text-sm font-semibold text-stone-100">T5</span>
                 <textarea
-                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                  className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                   rows={3}
                   value={t5Notes}
                   onChange={(e) => setT5Notes(e.target.value)}
@@ -353,7 +353,7 @@ export default function AddGamePage() {
               {gameType === "40k" && (
                 <div className="space-y-2 sm:col-span-2">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-semibold text-white/80">
+                    <span className="text-sm font-semibold text-stone-100">
                       Liste d’armée (PDF)
                     </span>
 
@@ -361,7 +361,7 @@ export default function AddGamePage() {
                       <button
                         type="button"
                         onClick={clearPdf}
-                        className="rounded-lg border border-white/10 bg-white/10 px-3 py-1 text-xs text-white/80 hover:bg-white/15 transition"
+                        className="rounded-lg border border-stone-700 bg-white/10 px-3 py-1 text-xs text-stone-100 hover:bg-white/15 transition"
                       >
                         Retirer
                       </button>
@@ -372,7 +372,7 @@ export default function AddGamePage() {
                     type="file"
                     accept="application/pdf"
                     disabled={uploadingPdf}
-                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-sm text-white/80 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
+                    className="w-full rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-sm text-stone-100 outline-none ring-1 ring-white/10 focus:ring-amber-200/20"
                     onChange={(e) => {
                       const f = e.target.files?.[0];
                       if (f) uploadPdf(f);
@@ -380,17 +380,17 @@ export default function AddGamePage() {
                   />
 
                   {uploadingPdf && (
-                    <p className="text-xs text-white/45">Upload en cours...</p>
+                    <p className="text-xs text-stone-400">Upload en cours...</p>
                   )}
 
-                  {pdfMsg && <p className="text-xs text-white/55">{pdfMsg}</p>}
+                  {pdfMsg && <p className="text-xs text-stone-400">{pdfMsg}</p>}
 
                   {armyListPdfUrl && (
                     <a
                       href={armyListPdfUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-block text-xs underline text-white/70 hover:text-white transition"
+                      className="inline-block text-xs underline text-stone-100/70 hover:text-stone-100 transition"
                     >
                       Voir le PDF uploadé
                     </a>
@@ -404,9 +404,9 @@ export default function AddGamePage() {
               disabled={saving || uploadingPdf}
               className="
                 mt-2 w-full rounded-xl
-                border border-white/10
+                border border-stone-700
                 bg-white/10 px-4 py-3
-                font-semibold text-white
+                font-semibold text-stone-100
                 shadow-[0_14px_40px_rgba(0,0,0,0.6)]
                 transition hover:bg-white/15
                 disabled:opacity-50
@@ -421,7 +421,7 @@ export default function AddGamePage() {
           </form>
 
           <div className="mt-10 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          <div className="mt-4 text-center text-xs text-white/35">
+          <div className="mt-4 text-center text-xs text-stone-400">
             Record the battle. Learn the pattern.
           </div>
         </div>

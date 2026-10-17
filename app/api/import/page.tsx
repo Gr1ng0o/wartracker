@@ -38,7 +38,7 @@ export default function ImportPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-6">
-      <div className="rounded-3xl border border-white/10 bg-black/60 p-6 text-white shadow-2xl backdrop-blur-md space-y-4">
+      <div className="rounded-sm border border-stone-700 bg-black/60 p-6 text-stone-100 shadow-2xl  space-y-4">
         <Link
           href="/"
           className="inline-block rounded-xl bg-white/90 px-4 py-2 text-sm font-semibold text-black transition hover:bg-white"
@@ -69,8 +69,8 @@ export default function ImportPage() {
           {msg && <div className="text-sm text-gray-200">{msg}</div>}
         </form>
 
-        <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-sm text-gray-300">
-          <div className="font-semibold text-white mb-2">Exemple CSV</div>
+        <div className="rounded-sm border border-stone-700 bg-black/40 p-4 text-sm text-gray-300">
+          <div className="font-semibold text-stone-100 mb-2">Exemple CSV</div>
           <pre className="whitespace-pre-wrap">
 gameType,build,opponent,first,result,score,tag1,tag2,notes,createdAt
 40k,Ultramarines v1,Orks,true,W,+12,GT,Test,"Bon plan de jeu",2025-12-27T10:00:00Z
