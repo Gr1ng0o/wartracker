@@ -11,6 +11,6 @@ try {
   const storage=createClient(SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}}).storage.from(process.env.SUPABASE_MEDIA_BUCKET||"wartracker-media");
   for(let i=0;i<rows.length;i+=100){const {error}=await storage.remove(rows.slice(i,i+100).map(r=>r.path));if(error)throw error;}
  }
- await prisma.$transaction([prisma.media.deleteMany(),prisma.game.deleteMany()]);
+ await prisma.$transaction([prisma.media.deleteMany(),prisma.armyRoster.deleteMany(),prisma.game.deleteMany()]);
  console.log("Toutes les parties et entrées de la médiathèque ont été effacées. Les fichiers référencés de la médiathèque ont été supprimés du stockage. Les anciens liens Drive nécessitent un nettoyage dans Drive.");
 }finally{await prisma.$disconnect();}

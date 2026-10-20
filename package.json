@@ -11,7 +11,8 @@
     "media:setup": "node --env-file-if-exists=.env.local scripts/setup-media.mjs",
     "data:reset": "node --env-file-if-exists=.env.local scripts/reset-wartracker.mjs",
     "test:media": "node --experimental-strip-types --test tests/media-policy.test.mjs tests/media-routes.test.cjs",
-    "db:deploy": "node --env-file-if-exists=.env.local node_modules/prisma/build/index.js migrate deploy"
+    "db:deploy": "node --env-file-if-exists=.env.local node_modules/prisma/build/index.js migrate deploy",
+    "test:aln": "node --test tests/aln-parser.test.cjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.1",
@@ -21,6 +22,7 @@
     "papaparse": "^5.5.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "unpdf": "^1.9.1",
     "zod": "^4.2.1"
   },
   "devDependencies": {

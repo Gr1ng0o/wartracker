@@ -31,3 +31,17 @@ Enregistrer une partie ouvre sa médiathèque. Sélectionner plusieurs fichiers 
 Limites : 50 Mo par fichier, transfert standard sans reprise automatique, pas de transcodage des vidéos (MOV dépend du navigateur). Les jetons de transfert Supabase restent valables deux heures ; éviter d’utiliser le reset pendant des transferts. Les objets non référencés après un transfert interrompu/reset se nettoient dans le bucket dédié. Les suppressions stockage et base ne sont pas atomiques : les entrées restent supprimables en cas d’échec du stockage, et un reset partiel se relance.
 
 Les anciennes sauvegardes SQL/SQLite ont été retirées de l’état courant du dépôt. Elles restent dans l’historique Git ; cette version ne réécrit pas l’historique et n’efface pas les sauvegardes externes.
+
+## Import ALN et statistiques d’unités
+
+Exécuter db:deploy avant de déployer la fonctionnalité /40k/lists. La migration ajoute ArmyRoster et RosterUnit, sans modifier les parties existantes. Le code d’accès est le même que celui de la médiathèque. Le parsing ne nécessite pas Supabase : il nécessite ADMIN_KEY ; l’enregistrement et les statistiques nécessitent PostgreSQL migré.
+
+Le PDF ALN texte avec tableaux M / E / SV / PV / CD / CO est analysé en mémoire (4 Mo, 40 pages maximum), sans conserver le binaire ni appeler un service IA. Les points, effectifs, profils, équipements, optimisations et lignes d’armes sont conservés. L’utilisateur vérifie l’aperçu et peut corriger noms, points, effectifs, faction et attachements avant enregistrement. Les scans/OCR, listes abrégées sans profil et autres générateurs ne sont pas pris en charge. Une variante ALN peut nécessiter des adaptations : les totaux incohérents sont signalés. Les liens de meneur sont déduits de la proximité des fiches ; vérifier leur affectation dans l’aperçu.
+
+Un exemplaire de chaque unité est conservé, même lorsque plusieurs portent le même nom. Les meneurs ont des fiches séparées et une position d’attachement. Une liste peut être enregistrée sans partie puis copiée dans une partie. Une seule liste par camp et par partie ; le remplacement doit être explicitement coché et se fait en transaction. Les imports utilisent une clé pour éviter le double enregistrement d’un clic répété. Seules les 100 listes les plus récentes sont affichées dans la bibliothèque ; les statistiques utilisent toutes les listes rattachées à une partie.
+
+Les statistiques distinguent les factions et les camps. Une unité présente plusieurs fois compte une seule présence par partie ; les copies et les points sont additionnés. Le taux de victoire exclut les nuls et résultats inconnus. Les listes sans partie sont exclues. Le score moyen est celui de l’armée, aucune élimination ni performance individuelle n’est inférée du PDF. La suppression d’une partie conserve ses listes hors statistiques, la remise à zéro les efface aussi.
+
+Validation : npm run test:aln. Pour tester le document local réel, définir ALN_SAMPLE_PDF vers son chemin avant la commande ; le PDF utilisateur n’est pas publié dans le dépôt.
+
+Le test local via HTTP peut être bloqué par l’isolation réseau du sandbox. Valider le parcours complet dans un aperçu avec PostgreSQL migré ; la lecture directe du PDF réel est couverte par le test optionnel.

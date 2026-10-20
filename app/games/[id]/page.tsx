@@ -81,7 +81,7 @@ export default async function GameDetailPage(ctx: Ctx) {
       </Link>
 
       <Link className="media-detail-link" href={"/media?gameId="+id}>Photos, vidéos et documents de cette partie →</Link>
-        <GameDetailClient game={safeGame} />
+        {game.gameType==="40k"&&<Link className="media-detail-link" href={"/40k/lists?gameId="+id}>Unités, import ALN et statistiques →</Link>}<GameDetailClient game={safeGame} />
     </main>
   );
 }

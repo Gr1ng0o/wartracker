@@ -15,6 +15,7 @@ model Game {
   primaryMission     String?
   deployment         String?
   terrainLayout      String?
+  rosters            ArmyRoster[]
   media              Media[]
   id                 String   @id @default(cuid())
   createdAt          DateTime @default(now())
@@ -67,4 +68,42 @@ model Media {
   status       String   @default("pending")
   @@index([gameId, createdAt])
   @@index([status, createdAt])
+}
+
+model ArmyRoster {
+  id             String @id @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  importKey      String @unique
+  name           String
+  faction        String
+  detachment     String
+  side           String @default("my")
+  gameId         String?
+  game           Game? @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  sourceHash     String
+  declaredPoints Int?
+  declaredModels Int?
+  declaredUnits  Int?
+  units          RosterUnit[]
+  @@unique([gameId, side])
+}
+model RosterUnit {
+  id                 String @id @default(cuid())
+  rosterId           String
+  roster             ArmyRoster @relation(fields: [rosterId], references: [id], onDelete: Cascade)
+  position           Int
+  name               String
+  unitKey            String
+  category           String
+  models             Int
+  points             Int
+  leader             Boolean @default(false)
+  attachedToPosition Int?
+  profile            Json?
+  equipment          String[]
+  enhancements       String[]
+  weapons            String[]
+  @@unique([rosterId, position])
+  @@index([unitKey])
 }
