@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
+import { gameStats } from "@/lib/game-stats";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { GameDTO } from "../types";
@@ -34,9 +35,9 @@ function formatDate(iso: string) {
   });
 }
 
-function missionLine(g: any) {
+function missionLine(g: GameDTO) {
   const parts = [g.missionPack, g.primaryMission, g.deployment, g.terrainLayout]
-    .map((x: any) => (typeof x === "string" ? x.trim() : ""))
+    .map((x) => (typeof x === "string" ? x.trim() : ""))
     .filter(Boolean);
   return parts.length ? parts.join(" – ") : null;
 }
@@ -48,6 +49,7 @@ export default function GamesOverview40kClient({
 }) {
   const router = useRouter();
   const [q, setQ] = useState("");
+  const deferredQuery = useDeferredValue(q);
 
   const only40k = useMemo(
     () => initialGames.filter((g) => g.gameType === "40k"),
@@ -55,10 +57,10 @@ export default function GamesOverview40kClient({
   );
 
   const filtered = useMemo(() => {
-    const qq = q.trim().toLowerCase();
+    const qq = deferredQuery.trim().toLowerCase();
     if (!qq) return only40k;
 
-    return only40k.filter((g: any) => {
+    return only40k.filter((g) => {
       const hay = [
         g.opponent,
         typeof g.points === "number" ? String(g.points) : "",
@@ -81,7 +83,7 @@ export default function GamesOverview40kClient({
 
       return hay.includes(qq);
     });
-  }, [only40k, q]);
+  }, [only40k, deferredQuery]);
 
   const total = filtered.length;
   const wins = filtered.filter((g) => g.result === "W").length;
@@ -103,7 +105,7 @@ export default function GamesOverview40kClient({
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden text-white">
+    <main className="relative min-h-screen overflow-hidden text-stone-100">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-black/60" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.55)_55%,rgba(0,0,0,0.92)_100%)]" />
@@ -112,26 +114,26 @@ export default function GamesOverview40kClient({
       </div>
 
       <div className="relative mx-auto max-w-5xl px-4 py-6">
-        <div className="rounded-[28px] border border-white/10 bg-black/55 p-6 sm:p-8 shadow-[0_30px_120px_rgba(0,0,0,0.85)] backdrop-blur-md">
+        <div className="rounded-sm border border-stone-700 bg-black/55 p-6 sm:p-8 shadow-[0_30px_120px_rgba(0,0,0,0.85)] ">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="text-xs tracking-[0.45em] text-white/40">
+              <div className="text-xs tracking-[0.45em] text-stone-400">
                 WARHAMMER
               </div>
-              <h1 className="mt-1 text-3xl sm:text-4xl font-extrabold tracking-[0.04em] text-white">
+              <h1 className="mt-1 text-3xl sm:text-4xl font-normal tracking-[0.04em] text-stone-100">
                 Parties 40k
               </h1>
 
-              <p className="mt-2 text-sm text-white/65">
+              <p className="mt-2 text-sm text-stone-100/65">
                 Affichées :{" "}
-                <span className="font-semibold text-white/90">{total}</span> • W
-                : <span className="font-semibold text-white/90">{wins}</span> •
+                <span className="font-semibold text-stone-100">{total}</span> • W
+                : <span className="font-semibold text-stone-100">{wins}</span> •
                 L :{" "}
-                <span className="font-semibold text-white/90">{losses}</span> •
-                D : <span className="font-semibold text-white/90">{draws}</span>{" "}
+                <span className="font-semibold text-stone-100">{losses}</span> •
+                D : <span className="font-semibold text-stone-100">{draws}</span>{" "}
                 • Winrate :{" "}
-                <span className="font-semibold text-white/90">{winrate}%</span>{" "}
-                <span className="text-white/40">(sur W/L)</span>
+                <span className="font-semibold text-stone-100">{winrate}%</span>{" "}
+                <span className="text-stone-400">(sur W/L)</span>
               </p>
 
               <div className="mt-3 h-px w-56 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
@@ -141,11 +143,11 @@ export default function GamesOverview40kClient({
               href="/40k/add-game"
               className="
                 inline-flex items-center justify-center rounded-xl
-                border border-white/10 bg-black/60 px-4 py-2
-                text-sm font-semibold text-white/85
+                border border-stone-700 bg-black/60 px-4 py-2
+                text-sm font-semibold text-stone-100
                 shadow-[0_10px_30px_rgba(0,0,0,0.8)]
-                backdrop-blur transition
-                hover:bg-black/75 hover:border-amber-200/20 hover:text-white
+                 transition
+                hover:bg-black/75 hover:border-amber-200/20 hover:text-stone-100
               "
             >
               + Ajouter une partie
@@ -154,7 +156,8 @@ export default function GamesOverview40kClient({
 
           <div className="mt-4">
             <input
-              className="w-full rounded-xl border border-white/10 bg-black/60 px-3 py-2 text-sm text-white outline-none placeholder:text-white/35 focus:border-amber-200/30 focus:ring-1 focus:ring-amber-200/15"
+              className="w-full rounded-xl border border-stone-700 bg-black/60 px-3 py-2 text-sm text-stone-100 outline-none placeholder:text-stone-400 focus:border-amber-200/30 focus:ring-1 focus:ring-amber-200/15"
+              aria-label="Rechercher des parties 40k"
               placeholder="Rechercher (opponent / factions / missions / notes / score / points)…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -184,9 +187,9 @@ export default function GamesOverview40kClient({
               <Link
                 key={g.id}
                 href={`/40k/games/${g.id}`}
-                className="group relative block w-full overflow-hidden rounded-2xl border border-white/10 bg-black/50 backdrop-blur-sm p-4 text-white shadow-[0_18px_60px_rgba(0,0,0,0.75)] transition hover:border-amber-200/25 hover:bg-black/60"
+                className="group relative block w-full overflow-hidden rounded-sm border border-stone-700 bg-black/50  p-4 text-stone-100 shadow-[0_18px_60px_rgba(0,0,0,0.75)] transition hover:border-amber-200/25 hover:bg-black/60"
               >
-                <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/5" />
+                <div className="pointer-events-none absolute inset-0 rounded-sm ring-1 ring-white/5" />
 
                 <div className="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
@@ -200,13 +203,13 @@ export default function GamesOverview40kClient({
                       </span>
 
                       {typeof g.points === "number" ? (
-                        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/80 ring-1 ring-white/10">
+                        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-stone-100 ring-1 ring-white/10">
                           {g.points} pts
                         </span>
                       ) : null}
 
                       {scoreLine ? (
-                        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/80 ring-1 ring-white/10">
+                        <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-stone-100 ring-1 ring-white/10">
                           Score {scoreLine}
                         </span>
                       ) : null}
@@ -216,27 +219,27 @@ export default function GamesOverview40kClient({
                       {titleLeft}
                     </div>
 
-                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/60">
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-100/60">
                       <span>Jouée le {dateStr}</span>
                       {g.opponent ? <span>• Opponent: {g.opponent}</span> : null}
                     </div>
 
                     {mLine ? (
-                      <div className="mt-2 truncate text-sm text-white/75">
-                        <span className="text-white/45">Mission:</span>{" "}
-                        <span className="text-white/90">{mLine}</span>
+                      <div className="mt-2 truncate text-sm text-stone-100/75">
+                        <span className="text-stone-400">Mission:</span>{" "}
+                        <span className="text-stone-100">{mLine}</span>
                       </div>
                     ) : null}
 
                     {g.notes ? (
-                      <div className="mt-2 line-clamp-2 text-sm text-white/75">
-                        <span className="text-white/45">Notes:</span> {g.notes}
+                      <div className="mt-2 line-clamp-2 text-sm text-stone-100/75">
+                        <span className="text-stone-400">Notes:</span> {g.notes}
                       </div>
                     ) : null}
                   </div>
 
                   <div className="flex shrink-0 items-center justify-between gap-2 sm:flex-col sm:items-end">
-                    <span className="text-sm text-white/35 group-hover:text-amber-200/50 transition">
+                    <span className="text-sm text-stone-400 group-hover:text-amber-200/50 transition">
                       Open →
                     </span>
 
@@ -258,7 +261,7 @@ export default function GamesOverview40kClient({
                       className="
                         cursor-pointer select-none
                         rounded-xl bg-red-600/80 px-3 py-2
-                        text-xs font-semibold text-white
+                        text-xs font-semibold text-stone-100
                         hover:bg-red-700
                         ring-1 ring-white/10
                         focus:outline-none focus:ring-2 focus:ring-red-300/30
@@ -274,14 +277,14 @@ export default function GamesOverview40kClient({
           })}
 
           {filtered.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-black/50 p-6 text-sm text-white/70">
+            <div className="rounded-sm border border-stone-700 bg-black/50 p-6 text-sm text-stone-100/70">
               Aucun résultat.
             </div>
           ) : null}
         </div>
 
         <div className="mt-8 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <div className="mt-4 text-center text-xs text-white/35">
+        <div className="mt-4 text-center text-xs text-stone-400">
           The Long War is logged.
         </div>
       </div>

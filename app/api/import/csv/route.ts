@@ -1,8 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import Papa from "papaparse";
 
-const prisma = new PrismaClient();
+
 
 // (Optionnel mais conseillé) petite protection
 function assertAuthorized(req: Request) {

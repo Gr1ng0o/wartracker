@@ -8,17 +8,10 @@ import GameDetailClient from "../../_components/game-detail-client";
 export const runtime = "nodejs";
 import { prisma } from "@/lib/prisma";
 
-type Ctx =
-  | { params: { id: string } }
-  | { params: Promise<{ id: string }> };
+type Ctx = { params: Promise<{ id: string }> };
 
 export default async function GameDetailPage(ctx: Ctx) {
-  const params =
-    "then" in (ctx as any).params
-      ? await (ctx as { params: Promise<{ id: string }> }).params
-      : (ctx as { params: { id: string } }).params;
-
-  const id = params?.id;
+  const { id } = await ctx.params;
 
   if (!id) {
     return (
@@ -87,7 +80,8 @@ export default async function GameDetailPage(ctx: Ctx) {
         ← Retour
       </Link>
 
-      <GameDetailClient game={safeGame} />
+      <Link className="media-detail-link" href={"/media?gameId="+id}>Photos, vidéos et documents de cette partie →</Link>
+        {game.gameType==="40k"&&<Link className="media-detail-link" href={"/40k/lists?gameId="+id}>Unités, import ALN et statistiques →</Link>}<GameDetailClient game={safeGame} />
     </main>
   );
 }

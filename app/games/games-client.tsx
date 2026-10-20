@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
+import { gameStats } from "@/lib/game-stats";
 import type { GameDTO } from "../types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,9 +15,10 @@ export default function GamesClient({
 
   const [type, setType] = useState<"all" | "40k" | "FaB">("all");
   const [q, setQ] = useState("");
+  const deferredQuery = useDeferredValue(q);
 
   const filtered = useMemo(() => {
-    const qq = q.trim().toLowerCase();
+    const qq = deferredQuery.trim().toLowerCase();
     return initialGames.filter((g) => {
       const okType = type === "all" ? true : g.gameType === type;
       const okQ =
@@ -26,7 +28,7 @@ export default function GamesClient({
             (g.build || "").toLowerCase().includes(qq);
       return okType && okQ;
     });
-  }, [initialGames, type, q]);
+  }, [initialGames, type, deferredQuery]);
 
   const total = filtered.length;
   const wins = filtered.filter((g) => g.result === "W").length;
@@ -52,7 +54,7 @@ export default function GamesClient({
 
   return (
     <main className="mx-auto max-w-4xl p-6">
-      <div className="rounded-2xl bg-black/60 backdrop-blur-md p-6 text-white shadow-xl">
+      <div className="rounded-sm bg-black/60  p-6 text-stone-100 shadow-xl">
         <div>
           <h1 className="text-3xl font-bold">Parties</h1>
           <p className="text-sm text-gray-300">
@@ -63,11 +65,11 @@ export default function GamesClient({
           </p>
         </div>
 
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           <select
-            className="rounded-lg border px-3 py-2 text-black"
+            aria-label="Filtrer par jeu" className="rounded-lg border px-3 py-2"
             value={type}
-            onChange={(e) => setType(e.target.value as any)}
+            onChange={(e) => setType(e.target.value as "all" | "40k" | "FaB")}
           >
             <option value="all">Tous</option>
             <option value="40k">40k</option>
@@ -76,6 +78,7 @@ export default function GamesClient({
 
           <input
             className="w-56 rounded-lg border px-3 py-2 text-black"
+            aria-label="Rechercher des parties"
             placeholder="Rechercher (opponent/build)…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -83,6 +86,7 @@ export default function GamesClient({
         </div>
       </div>
 
+      {filtered.length === 0 && <p role="status" className="mt-6 border border-stone-700 p-6 text-stone-400">Aucune bataille trouvée. Ajoute une partie ou modifie ta recherche.</p>}
       <ul className="mt-4 grid gap-3">
         {filtered.map((g) => {
           const created = new Date(g.createdAt);
@@ -106,10 +110,10 @@ export default function GamesClient({
 
           return (
             <li key={g.id} className="rounded-xl shadow-lg">
-              <div className="relative rounded-xl bg-black/50 backdrop-blur-sm p-4 text-white">
+              <div className="relative rounded-xl bg-black/50  p-4 text-stone-100">
                 {/* lien détail */}
                 <Link
-                  href={`/40k/games/${g.id}`}
+                  href={g.gameType === "40k" ? `/40k/games/${g.id}` : `/games/${g.id}`}
                   className="block hover:bg-white/5 transition rounded-lg"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
@@ -137,7 +141,7 @@ export default function GamesClient({
                     e.stopPropagation();
                     deleteGame(g.id);
                   }}
-                  className="absolute right-3 bottom-3 rounded-lg bg-red-600/80 px-3 py-1 text-xs font-semibold text-white hover:bg-red-700"
+                  className="absolute right-3 bottom-3 rounded-lg bg-red-600/80 px-3 py-1 text-xs font-semibold text-stone-100 hover:bg-red-700"
                 >
                   Supprimer
                 </button>

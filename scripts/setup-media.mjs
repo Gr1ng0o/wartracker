@@ -1,0 +1,12 @@
+import { createClient } from "@supabase/supabase-js";
+const {SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,ADMIN_KEY}=process.env;
+if(!SUPABASE_URL||!SUPABASE_SERVICE_ROLE_KEY||!ADMIN_KEY||ADMIN_KEY.length<24) throw new Error("Configure SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY et ADMIN_KEY (24 caractères minimum). Aucun secret ne doit être commité.");
+const client=createClient(SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}});
+const bucket=process.env.SUPABASE_MEDIA_BUCKET||"wartracker-media";
+const settings={public:false,fileSizeLimit:50*1024*1024,allowedMimeTypes:["image/jpeg","image/png","image/webp","image/avif","video/mp4","video/webm","video/quicktime","application/pdf"]};
+const {data,error}=await client.storage.getBucket(bucket);
+if(data?.public) throw new Error("Ce bucket existe et est public. Utilise un NOUVEAU bucket privé dédié à WarTracker.");
+if(error&& ![400,404].includes(Number(error.statusCode))) throw error;
+const result=data?await client.storage.updateBucket(bucket,settings):await client.storage.createBucket(bucket,settings);
+if(result.error)throw result.error;
+console.log("Stockage privé WarTracker configuré. Limite : 50 Mo par fichier.");
