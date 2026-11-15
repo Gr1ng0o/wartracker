@@ -14,3 +14,59 @@ test('stats : listes sans partie exclues, camp adverse inversé et nuls sans dé
 test('stats : factions séparées et unités absentes non ajoutées au dénominateur',()=>{const rows=unitStatistics([roster,{...roster,id:'other',faction:'Faction B',game:{...game,id:'g2',result:'L'}}]);assert.equal(rows.length,2);assert.equal(rows[0].games,1);assert.equal(rows[1].games,1);});
 test('validation : attachements cycliques, effectifs négatifs et positions dupliquées refusés',()=>{const r=parser.parseAlnText(sample);const body={...r,importKey:crypto.randomUUID(),sourceHash:'a'.repeat(64),gameId:null,side:'my',replace:false};assert.equal(rosterInput.safeParse(body).success,true);for(const change of [{models:0},{attachedToPosition:1},{position:1}]){assert.equal(rosterInput.safeParse({...body,units:body.units.map((u,i)=>i===0?{...u,...change}:u)}).success,false);}});
 test('PDF fourni : extraction réelle de six pages, profils et meneurs',{skip:!process.env.ALN_SAMPLE_PDF},async()=>{const {parseAlnPdf}=compile('lib/aln-pdf.ts',{'./aln-parser':parser});const r=await parseAlnPdf(new Uint8Array(fs.readFileSync(process.env.ALN_SAMPLE_PDF)));assert.equal(r.units.length,8);assert.equal(r.declaredPoints,1980);assert.equal(r.units.reduce((s,u)=>s+u.points,0),1980);assert.equal(r.units.reduce((s,u)=>s+u.models,0),18);assert.equal(r.units[1].attachedToPosition,0);assert.equal(r.units[5].attachedToPosition,4);assert.ok(r.units.every(u=>u.profile&&u.equipment.length));});
+
+function gameRoute(prisma) {
+    const persistence = compile("lib/roster-persistence.ts", { "./aln-parser": parser });
+    return compile("app/api/games/route.ts", {
+        "@/lib/prisma": { prisma },
+        "@/lib/aln-parser": parser,
+        "@/lib/roster-input": { rosterInput },
+        "@/lib/roster-persistence": persistence,
+    });
+}
+function gameRequest(body) {
+    return new Request("https://wartracker.test/api/games", { method: "POST", body: JSON.stringify(body) });
+}
+
+test("enregistrer une partie rattache une liste par camp dans la même écriture", async () => {
+    const saved = { ...parser.parseAlnText(sample), sourceHash: "a".repeat(64), importKey: crypto.randomUUID() };
+    const opponentText = sample.replaceAll("Adeptus Custodes", "Faction adverse");
+    let created;
+    const route = gameRoute({
+        armyRoster: { findUnique: async () => saved },
+        game: { create: async ({ data }) => { created = data; return { id: "game" }; } },
+    });
+    const response = await route.POST(gameRequest({
+        gameType: "40k", opponent: "Alex", myScore: 85, oppScore: 70,
+        myRoster: { savedId: "library" }, oppListText: opponentText,
+    }));
+    assert.equal(response.status, 201);
+    assert.equal(created.result, "W");
+    const [my, opponent] = created.rosters.create;
+    assert.deepEqual([my.side, opponent.side], ["my", "opponent"]);
+    assert.notEqual(my.importKey, saved.importKey);
+    assert.equal(opponent.faction, "Faction adverse");
+    assert.equal(created.oppFaction, "Faction adverse");
+    assert.equal(my.units.create.length, 8);
+    assert.equal(opponent.units.create[1].attachedToPosition, 0);
+});
+
+test("une liste invalide laisse la partie et les deux listes sans écriture", async () => {
+    let writes = 0;
+    const route = gameRoute({ game: { create: async () => { writes++; } } });
+    const response = await route.POST(gameRequest({
+        gameType: "40k", opponent: "Alex", myListText: sample, opponentRoster: { draft: {} },
+    }));
+    assert.equal(response.status, 422);
+    assert.match((await response.json()).error, /Liste adverse/);
+    assert.equal(writes, 0);
+});
+
+test("une partie accepte toujours des notes de liste libres sans import ALN", async () => {
+    let created;
+    const route = gameRoute({ game: { create: async ({ data }) => { created = data; return { id: "game" }; } } });
+    const response = await route.POST(gameRequest({ gameType: "40k", opponent: "Alex", myListText: "Mes notes" }));
+    assert.equal(response.status, 201);
+    assert.equal(created.myListText, "Mes notes");
+    assert.equal(created.rosters, undefined);
+});

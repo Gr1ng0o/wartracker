@@ -2,11 +2,11 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireSameOrigin, mediaError } from "@/lib/media-http";
 import { rosterInput } from "@/lib/roster-input";
-import { unitKey } from "@/lib/aln-parser";
+import { rosterUnits } from "@/lib/roster-persistence";
 export const runtime = "nodejs";
 export async function GET(req: Request) { try {
     const gameId = new URL(req.url).searchParams.get("gameId") || undefined;
-    const [rosters, games] = await Promise.all([prisma.armyRoster.findMany({ where: gameId ? { gameId } : {}, include: { units: { orderBy: { position: "asc" } } }, orderBy: { createdAt: "desc" }, take: 100 }), prisma.game.findMany({ where: { gameType: "40k" }, select: { id: true, opponent: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 500 })]);
+    const [rosters, games] = await Promise.all([prisma.armyRoster.findMany({ where: gameId ? { gameId } : {}, include: { units: { orderBy: { position: "asc" } } }, orderBy: { createdAt: "desc" }, take: 100 }), prisma.game.findMany({ where: { gameType: "40k" }, select: { id: true, opponent: true, createdAt: true, myScore: true, oppScore: true }, orderBy: { createdAt: "desc" }, take: 500 })]);
     return Response.json({ rosters, games }, { headers: { "Cache-Control": "private, no-store" } });
 }
 catch (e) {
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
         const collision = gameId ? await prisma.armyRoster.findUnique({ where: { gameId_side: { gameId, side } } }) : null;
         if (collision && !replace)
             return Response.json({ error: "Une liste existe déjà pour ce camp. Coche le remplacement après vérification." }, { status: 409 });
-        const nested = units.map(u => ({ ...u, unitKey: unitKey(u.name), profile: u.profile ?? Prisma.DbNull }));
+        const nested = rosterUnits(units);
         const roster = await prisma.$transaction(async (tx) => { if (collision) {
             await tx.rosterUnit.deleteMany({ where: { rosterId: collision.id } });
             return tx.armyRoster.update({ where: { id: collision.id }, data: { ...data, gameId, side, units: { create: nested } }, select: { id: true } });
