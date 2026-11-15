@@ -1,11 +1,10 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireMediaAccess, mediaError } from "@/lib/media-auth";
+import { requireSameOrigin, mediaError } from "@/lib/media-http";
 import { rosterInput } from "@/lib/roster-input";
 import { unitKey } from "@/lib/aln-parser";
 export const runtime = "nodejs";
 export async function GET(req: Request) { try {
-    await requireMediaAccess(req);
     const gameId = new URL(req.url).searchParams.get("gameId") || undefined;
     const [rosters, games] = await Promise.all([prisma.armyRoster.findMany({ where: gameId ? { gameId } : {}, include: { units: { orderBy: { position: "asc" } } }, orderBy: { createdAt: "desc" }, take: 100 }), prisma.game.findMany({ where: { gameType: "40k" }, select: { id: true, opponent: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 500 })]);
     return Response.json({ rosters, games }, { headers: { "Cache-Control": "private, no-store" } });
@@ -15,7 +14,7 @@ catch (e) {
 } }
 export async function POST(req: Request) {
     try {
-        await requireMediaAccess(req);
+        requireSameOrigin(req);
         const parsed = rosterInput.safeParse(await req.json());
         if (!parsed.success)
             return Response.json({ error: "Vérifie les unités, la faction et les attachements." }, { status: 400 });

@@ -22,8 +22,6 @@ export default function ImportPage() {
     const res = await fetch("/api/import/csv", {
       method: "POST",
       body: fd,
-      // Optionnel: si tu actives ADMIN_KEY
-      // headers: { "x-admin-key": "TON_ADMIN_KEY" },
     });
 
     const json = await res.json();

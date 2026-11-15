@@ -1,10 +1,10 @@
 import { createHash, randomUUID } from "node:crypto";
-import { requireMediaAccess, mediaError } from "@/lib/media-auth";
+import { requireSameOrigin, mediaError } from "@/lib/media-http";
 import { parseAlnPdf, ALN_MAX_BYTES } from "@/lib/aln-pdf";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 export async function POST(req: Request) { try {
-    await requireMediaAccess(req);
+    requireSameOrigin(req);
     if (Number(req.headers.get("content-length")) > ALN_MAX_BYTES + 100000)
         return Response.json({ error: "PDF trop volumineux (4 Mo maximum)." }, { status: 413 });
     const form = await req.formData();

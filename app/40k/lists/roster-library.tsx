@@ -18,11 +18,10 @@ type Game = {
     createdAt: string;
 };
 async function api(url: string, options?: RequestInit) { const res = await fetch(url, { ...options, cache: "no-store" }); const data = await res.json(); if (!res.ok)
-    throw Object.assign(new Error(data.error || "Opération impossible."), { status: res.status }); return data; }
+    throw new Error(data.error || "Opération impossible."); return data; }
 export default function RosterLibrary({ initialGameId }: {
     initialGameId: string;
 }) {
-    const [locked, setLocked] = useState(true), [password, setPassword] = useState("");
     const [draft, setDraft] = useState<Draft | null>(null), [rosters, setRosters] = useState<Saved[]>([]), [games, setGames] = useState<Game[]>([]);
     const [gameId, setGameId] = useState(initialGameId), [side, setSide] = useState("my"), [statsSide, setStatsSide] = useState("my"), [stats, setStats] = useState<ReturnType<typeof unitStatistics>>([]), [rosteredGames, setRosteredGames] = useState(0);
     const [reviewed, setReviewed] = useState(false), [replace, setReplace] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState(""), [message, setMessage] = useState("");
@@ -35,32 +34,16 @@ export default function RosterLibrary({ initialGameId }: {
         setGames(library.games);
         setStats(statistics.units);
         setRosteredGames(statistics.rosteredGames);
-        setLocked(false);
     }
     catch (e) {
         if (id !== requests.current)
             return;
-        if (e instanceof Error && "status" in e && e.status === 401)
-            setLocked(true);
         setError(e instanceof Error ? e.message : "Chargement impossible.");
     } }, [gameId, statsSide]);
     useEffect(() => { const counter = requests; const timer = setTimeout(() => { void load(); }, 0); return () => { clearTimeout(timer); counter.current++; }; }, [load]);
-    function report(e: unknown) { if (e instanceof Error && "status" in e && e.status === 401) {
-        setLocked(true);
-        setRosters([]);
-        setStats([]);
-    } setError(e instanceof Error ? e.message : "Opération impossible."); }
-    async function unlock(e: React.FormEvent) { e.preventDefault(); setBusy(true); setError(""); try {
-        await api("/api/media/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
-        setPassword("");
-        await load();
+    function report(e: unknown) {
+        setError(e instanceof Error ? e.message : "Opération impossible.");
     }
-    catch (e) {
-        report(e);
-    }
-    finally {
-        setBusy(false);
-    } }
     async function parse(file: File | undefined) { if (!file)
         return; setDraft(null); setReviewed(false); setReplace(false); setError(""); setMessage(""); if (file.size > 4 * 1024 * 1024) {
         setError("Le PDF doit faire moins de 4 Mo.");
@@ -93,7 +76,6 @@ export default function RosterLibrary({ initialGameId }: {
     const total = draft?.units.reduce((s, u) => s + u.points, 0) || 0;
     return <main className="sanctum roster-library"><p className="eyebrow">WARHAMMER 40,000 / ORDRE DE BATAILLE</p><h1>Listes & statistiques</h1><p className="intro-copy">Importe un PDF ALN, vérifie les fiches puis associe ta liste à une partie. Les doublons et les meneurs sont conservés.</p>
  {error && <p role="alert" className="media-error">{error}</p>}{message && <p role="status" className="roster-message">{message}</p>}
- {locked ? <form className="media-unlock" onSubmit={unlock}><label htmlFor="roster-password">Code d’accès (le même que la médiathèque)</label><input id="roster-password" type="password" required autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)}/><button disabled={busy}>Ouvrir les listes</button></form> : <>
  <div className="roster-controls"><label>Partie<select value={gameId} disabled={busy} onChange={e => { setGameId(e.target.value); setReviewed(false); setReplace(false); }}><option value="">Bibliothèque / sans partie</option>{games.map(g => <option value={g.id} key={g.id}>{new Date(g.createdAt).toLocaleDateString("fr-FR")} — {g.opponent} · {g.id.slice(-6)}</option>)}</select></label><label>Liste à importer<select value={side} disabled={busy} onChange={e => { setSide(e.target.value); setReviewed(false); }}><option value="my">Mon armée</option><option value="opponent">Armée adverse</option></select></label></div>
  <div className="media-dropzone"><label>Choisir un PDF ALN (4 Mo maximum)<input type="file" accept="application/pdf,.pdf" disabled={busy} onChange={e => { void parse(e.target.files?.[0]); e.target.value = ""; }}/></label><p className="intro-copy">Le PDF est lu pour extraire les fiches. Il n’est pas conservé dans le stockage. Les scans et les exports sans profils ne sont pas pris en charge.</p>{busy && <p role="status">Traitement en cours…</p>}</div>
  {draft && <section className="roster-review"><h2>Vérifier avant d’enregistrer</h2><div className="roster-controls"><label>Nom de la liste<input value={draft.name} maxLength={200} onChange={e => { setDraft({ ...draft, name: e.target.value }); setReviewed(false); }}/></label><label>Faction<input value={draft.faction} maxLength={200} onChange={e => { setDraft({ ...draft, faction: e.target.value }); setReviewed(false); }}/></label><label>Détachement<input value={draft.detachment} maxLength={300} onChange={e => { setDraft({ ...draft, detachment: e.target.value }); setReviewed(false); }}/></label></div>
@@ -108,6 +90,5 @@ export default function RosterLibrary({ initialGameId }: {
  <section><h2>Statistiques par unité</h2><label>Camp analysé<select value={statsSide} disabled={busy} onChange={e => setStatsSide(e.target.value)}><option value="my">Mes armées</option><option value="opponent">Armées adverses</option></select></label><p className="intro-copy">{rosteredGames} parties avec liste pour ce camp. Une partie compte une fois par type d’unité, même avec plusieurs exemplaires. Victoires / défaites du camp choisi ; taux sur les parties décisives. Les listes sans partie sont exclues. Le score moyen est celui de l’armée, pas celui de l’unité.</p>
  <div className="roster-table-scroll"><table><thead><tr><th>Unité / faction</th><th>Parties</th><th>V / D / N</th><th>Victoires</th><th>Exemplaires / partie</th><th>Points / partie</th><th>Score armée moyen</th></tr></thead><tbody>{stats.map(row => <tr key={row.faction + row.name}><td>{row.name}<small>{row.faction}</small></td><td>{row.games}</td><td>{row.wins} / {row.losses} / {row.draws}</td><td>{row.winRate === null ? "—" : row.winRate + " %"}</td><td>{row.averageCopies.toFixed(1)}</td><td>{row.averagePoints.toFixed(0)}</td><td>{row.averageArmyScore === null ? "—" : row.averageArmyScore.toFixed(1)}</td></tr>)}</tbody></table></div>{stats.length === 0 && <p className="intro-copy">Associe une liste à une partie pour démarrer les statistiques.</p>}<p className="intro-copy">Ces associations décrivent ton historique ; elles ne mesurent pas l’effet causal d’une unité sur la victoire. Éliminations, survie et points d’objectif individuels ne figurent pas dans le PDF.</p></section>
  <Link className="media-detail-link" href={"/media" + (gameId ? "?gameId=" + gameId : "")}>Ajouter les photos et vidéos →</Link>
- </>}
  </main>;
 }

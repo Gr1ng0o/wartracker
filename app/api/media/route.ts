@@ -1,12 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/lib/prisma";
-import { requireMediaAccess, mediaError } from "@/lib/media-auth";
+import { requireSameOrigin, mediaError } from "@/lib/media-http";
 import { mediaStorage } from "@/lib/media-storage";
 import { mediaInput, extensionFor } from "@/lib/media-policy";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export async function GET(req:Request) { try {
- await requireMediaAccess(req);
  const params=new URL(req.url).searchParams;
  const gameId=params.get("gameId")||undefined;
  const q=(params.get("q")||"").slice(0,200);
@@ -18,7 +17,7 @@ export async function GET(req:Request) { try {
  return Response.json({items:items.map(m=>({...m,url:urls?.find(u=>u.path===m.path)?.signedUrl??null})),total,games},{headers:{"Cache-Control":"private, no-store"}});
  } catch(e) {return mediaError(e);} }
 export async function POST(req:Request) {try {
- await requireMediaAccess(req); const parsed=mediaInput.safeParse(await req.json());
+ requireSameOrigin(req); const parsed=mediaInput.safeParse(await req.json());
  if(!parsed.success) return Response.json({error:"Format non accepté ou fichier trop volumineux (50 Mo maximum)."},{status:400});
  const input=parsed.data;
  if(input.gameId && !await prisma.game.findUnique({where:{id:input.gameId},select:{id:true}})) return Response.json({error:"Partie introuvable."},{status:404});

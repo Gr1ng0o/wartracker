@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
-const {SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,ADMIN_KEY}=process.env;
-if(!SUPABASE_URL||!SUPABASE_SERVICE_ROLE_KEY||!ADMIN_KEY||ADMIN_KEY.length<24) throw new Error("Configure SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY et ADMIN_KEY (24 caractères minimum). Aucun secret ne doit être commité.");
+const {SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY}=process.env;
+if(!SUPABASE_URL||!SUPABASE_SERVICE_ROLE_KEY) throw new Error("Configure SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY. Aucun secret ne doit être commité.");
 const client=createClient(SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}});
 const bucket=process.env.SUPABASE_MEDIA_BUCKET||"wartracker-media";
 const settings={public:false,fileSizeLimit:50*1024*1024,allowedMimeTypes:["image/jpeg","image/png","image/webp","image/avif","video/mp4","video/webm","video/quicktime","application/pdf"]};

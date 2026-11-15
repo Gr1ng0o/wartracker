@@ -2,16 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import Papa from "papaparse";
 
-
-
-// (Optionnel mais conseillé) petite protection
-function assertAuthorized(req: Request) {
-  const key = req.headers.get("x-admin-key");
-  if (process.env.ADMIN_KEY && key !== process.env.ADMIN_KEY) {
-    throw new Error("Unauthorized");
-  }
-}
-
 // Schéma attendu par ligne CSV
 const RowSchema = z.object({
   gameType: z.enum(["40k", "FaB"]).default("40k"),
@@ -29,8 +19,6 @@ const RowSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    assertAuthorized(req);
-
     const formData = await req.formData();
     const file = formData.get("file");
 
@@ -92,7 +80,6 @@ export async function POST(req: Request) {
     return Response.json({ ok: true, inserted: rowsValidated.length });
   } catch (e: any) {
     const msg = e?.message ?? "Unknown error";
-    const status = msg === "Unauthorized" ? 401 : 500;
-    return Response.json({ ok: false, error: msg }, { status });
+    return Response.json({ ok: false, error: msg }, { status: 500 });
   }
 }
