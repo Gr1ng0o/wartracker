@@ -29,7 +29,7 @@ export async function GET(req: Request) {
             }),
         ]);
         return Response.json({
-            side, units: unitStatistics(rosters), rosteredGames: rosters.length,
+            side, units: unitStatistics(rosters), rosteredGames: rosters.filter(roster => !roster.game?.result.startsWith("IN_PROGRESS")).length,
             opposingFactions: factions.map(({ faction }) => faction),
         }, { headers: { "Cache-Control": "private, no-store" } });
     } catch (error) {

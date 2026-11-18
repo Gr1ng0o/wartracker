@@ -32,14 +32,8 @@ export type AlnRoster = {
 export function unitKey(name: string) { return name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[’‘]/g, "'").toLocaleLowerCase("fr").replace(/[^a-z0-9]+/g, " ").trim(); }
 const heading = /^M\s+E\s+S[Vv]\s+PV\s+(?:CD|Cd)\s+(?:CO|OC)$/i;
 const section = /^(?:Ligne|Infanterie|V[ée]hicules?|Personnages?|Transports? assign[ée]s?|Mont[ée]s?|B[êe]tes?|Monstres?|Fortifications?|Autres|[ÉE]lite|Soutien|Attaque rapide|QG|Alli[ée]s?)$/iu;
-function alnLines(text: string) {
-    return text.normalize("NFC").replace(/\u00a0/g, " ").split(/\r?\n/).map(l => l.replace(/\s+/g, " ").trim()).filter(Boolean);
-}
-export function hasAlnProfiles(text: string) {
-    return alnLines(text).some(line => heading.test(line));
-}
 export function parseAlnText(text: string): AlnRoster {
-    const lines = alnLines(text);
+    const lines = text.normalize("NFC").replace(/\u00a0/g, " ").split(/\r?\n/).map(l => l.replace(/\s+/g, " ").trim()).filter(Boolean);
     const title = lines.find(l => /\[[^\]]+\]/.test(l)) || "";
     const faction = title.match(/\[([^\]]+)\]/)?.[1] || "";
     const name = title.includes("]") ? title.slice(title.indexOf("]") + 1).trim() : "Liste ALN";

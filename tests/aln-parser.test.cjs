@@ -17,12 +17,13 @@ test('PDF fourni : extraction réelle de six pages, profils et meneurs',{skip:!p
 
 function gameRoute(prisma) {
     const persistence = compile("lib/roster-persistence.ts", { "./aln-parser": parser });
-    return compile("app/api/games/route.ts", {
+    const service = compile("lib/game-save.ts", {
         "@/lib/prisma": { prisma },
         "@/lib/aln-parser": parser,
         "@/lib/roster-input": { rosterInput },
         "@/lib/roster-persistence": persistence,
     });
+    return { POST: service.saveGame, saveGame: service.saveGame };
 }
 function gameRequest(body) {
     return new Request("https://wartracker.test/api/games", { method: "POST", body: JSON.stringify(body) });
@@ -69,4 +70,18 @@ test("une partie accepte toujours des notes de liste libres sans import ALN", as
     assert.equal(response.status, 201);
     assert.equal(created.myListText, "Mes notes");
     assert.equal(created.rosters, undefined);
+});
+
+test("une partie en cours conserve le résultat saisi et reste hors statistiques", async () => {
+ let data;
+ const route = gameRoute({game:{create:async args => { data=args.data; return {id:"draft"}; }}});
+ const response = await route.POST(gameRequest({gameType:"FaB",opponent:"Alex",build:"Bravo",status:"in_progress",result:"L"}));
+ assert.equal(response.status,201); assert.equal(data.result,"IN_PROGRESS:L");
+ assert.deepEqual(unitStatistics([{...roster,game:{...game,result:data.result}}]),[]);
+});
+test("éditer une partie conserve les listes si aucun nouvel import et valide le score final", async () => {
+ let update;
+ const route=gameRoute({game:{update:async args=>{update=args;return {id:args.where.id};}}});
+ const response=await route.saveGame(gameRequest({gameType:"40k",opponent:"Sam",status:"submitted",myScore:60,oppScore:80,myDetachment:"A · B",t1PhotoUrl:"https://drive.google.com/file/d/abc/view",t1Notes:"Tour modifié"}),"existing");
+ assert.equal(response.status,200);assert.equal(update.where.id,"existing");assert.equal(update.data.result,"L");assert.equal(update.data.myDetachment,"A · B");assert.equal(update.data.t1Notes,"Tour modifié");assert.equal(update.data.rosters,undefined);
 });

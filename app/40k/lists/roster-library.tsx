@@ -16,8 +16,6 @@ type Game = {
     id: string;
     opponent: string;
     createdAt: string;
-    myScore: number | null;
-    oppScore: number | null;
 };
 async function api(url: string, options?: RequestInit) { const res = await fetch(url, { ...options, cache: "no-store" }); const data = await res.json(); if (!res.ok)
     throw new Error(data.error || "Opération impossible."); return data; }
@@ -27,24 +25,21 @@ export default function RosterLibrary({ initialGameId }: {
     const [draft, setDraft] = useState<Draft | null>(null), [rosters, setRosters] = useState<Saved[]>([]), [games, setGames] = useState<Game[]>([]);
     const [gameId, setGameId] = useState(initialGameId), [side, setSide] = useState("my"), [statsSide, setStatsSide] = useState("my"), [stats, setStats] = useState<ReturnType<typeof unitStatistics>>([]), [rosteredGames, setRosteredGames] = useState(0);
     const [reviewed, setReviewed] = useState(false), [replace, setReplace] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState(""), [message, setMessage] = useState("");
-    const [against, setAgainst] = useState("");
-    const [opposingFactions, setOpposingFactions] = useState<string[]>([]);
     const requests = useRef(0);
     const load = useCallback(async () => { const id = ++requests.current; try {
-        const [library, statistics] = await Promise.all([api("/api/rosters?" + new URLSearchParams({ gameId })), api("/api/rosters/statistics?" + new URLSearchParams({ side: statsSide, against }))]);
+        const [library, statistics] = await Promise.all([api("/api/rosters?" + new URLSearchParams({ gameId })), api("/api/rosters/statistics?side=" + statsSide)]);
         if (id !== requests.current)
             return;
         setRosters(library.rosters);
         setGames(library.games);
         setStats(statistics.units);
         setRosteredGames(statistics.rosteredGames);
-        setOpposingFactions(statistics.opposingFactions);
     }
     catch (e) {
         if (id !== requests.current)
             return;
         setError(e instanceof Error ? e.message : "Chargement impossible.");
-    } }, [gameId, statsSide, against]);
+    } }, [gameId, statsSide]);
     useEffect(() => { const counter = requests; const timer = setTimeout(() => { void load(); }, 0); return () => { clearTimeout(timer); counter.current++; }; }, [load]);
     function report(e: unknown) {
         setError(e instanceof Error ? e.message : "Opération impossible.");
@@ -78,8 +73,6 @@ export default function RosterLibrary({ initialGameId }: {
     finally {
         setBusy(false);
     } }
-    const selectedGame = games.find(game => game.id === gameId);
-    const armies = gameId ? [rosters.find(roster => roster.side === "my"), rosters.find(roster => roster.side === "opponent")] : rosters;
     const total = draft?.units.reduce((s, u) => s + u.points, 0) || 0;
     return <main className="sanctum roster-library"><p className="eyebrow">WARHAMMER 40,000 / ORDRE DE BATAILLE</p><h1>Listes & statistiques</h1><p className="intro-copy">Importe un PDF ALN, vérifie les fiches puis associe ta liste à une partie. Les doublons et les meneurs sont conservés.</p>
  {error && <p role="alert" className="media-error">{error}</p>}{message && <p role="status" className="roster-message">{message}</p>}
@@ -93,48 +86,9 @@ export default function RosterLibrary({ initialGameId }: {
  <details><summary>Profil et équipement</summary>{u.profile && <p className="roster-profile">M {u.profile.movement} · E {u.profile.toughness} · SV {u.profile.save} · PV {u.profile.wounds} · CD {u.profile.leadership} · CO {u.profile.objectiveControl}</p>}<ul>{u.equipment.map((item, i) => <li key={i}>{item}</li>)}{u.enhancements.map((item, i) => <li key={"e" + i}>Optimisation : {item}</li>)}</ul><ul>{u.weapons.map((item, i) => <li key={i}>{item}</li>)}</ul></details></article>)}</div>
  <label className="roster-checkbox"><input type="checkbox" checked={reviewed} onChange={e => setReviewed(e.target.checked)}/> J’ai vérifié les unités, les attachements, les points et les avertissements.</label>{gameId && <label className="roster-checkbox"><input type="checkbox" checked={replace} onChange={e => setReplace(e.target.checked)}/> Remplacer la liste déjà associée à ce camp pour cette partie.</label>}<button disabled={busy || !reviewed} onClick={() => void save()}>Enregistrer toutes les unités →</button>
  </section>}
- <section>
-    <h2>{gameId ? "Armées de cette partie" : "Bibliothèque de listes (100 plus récentes)"}</h2>
-    {selectedGame && <p>Contre {selectedGame.opponent} · Score {selectedGame.myScore ?? "—"} à {selectedGame.oppScore ?? "—"}</p>}
-    {!gameId && rosters.length === 0 && <p className="intro-copy">Aucune liste enregistrée ici.</p>}
-    <div className="roster-unit-grid">
-        {armies.map((roster, index) => {
-            if (!roster) return <article className="roster-unit" key={index}>
-                <p className="eyebrow">{index === 0 ? "MON ARMÉE" : "ARMÉE ADVERSE"}</p>
-                <p>Aucune liste associée à ce camp.</p>
-            </article>;
-            const points = roster.units.reduce((sum, unit) => sum + unit.points, 0);
-            const models = roster.units.reduce((sum, unit) => sum + unit.models, 0);
-            return <article className="roster-unit" key={roster.id}>
-                <p className="eyebrow">{roster.side === "my" ? "MON ARMÉE" : "ARMÉE ADVERSE"}</p>
-                <h3>{roster.name}</h3>
-                <p>{roster.faction}{roster.detachment && " · " + roster.detachment}</p>
-                <p>{roster.units.length} fiches · {models} figurines · {points} points</p>
-                {roster.declaredPoints !== null && roster.declaredPoints !== points && <p className="roster-warning">{roster.declaredPoints} points annoncés dans la liste ALN. Vérifie les fiches extraites.</p>}
-                <details open={!!gameId}><summary>Voir les unités</summary>
-                    <ul>{roster.units.map(unit => <li key={unit.position}>
-                        {unit.name} × {unit.models} — {unit.points} pts{unit.leader ? " (meneur)" : ""}
-                    </li>)}</ul>
-                </details>
-                <button disabled={busy} onClick={() => {
-                    setDraft({ ...roster, importKey: crypto.randomUUID(), warnings: [] });
-                    setReviewed(false); setReplace(false);
-                    setMessage("Copie chargée dans l’aperçu. Choisis la partie et le camp avant de l’enregistrer.");
-                }}>Réutiliser cette liste</button>
-            </article>;
-        })}
-    </div>
- </section>
- <section><h2>Statistiques par unité</h2><div className="roster-controls">
-    <label>Camp analysé<select value={statsSide} disabled={busy} onChange={event => { setStatsSide(event.target.value); setAgainst(""); }}>
-        <option value="my">Mes armées</option><option value="opponent">Armées adverses</option>
-    </select></label>
-    <label>Faction affrontée<select value={against} disabled={busy || opposingFactions.length === 0} onChange={event => setAgainst(event.target.value)}>
-        <option value="">Toutes les factions</option>
-        {opposingFactions.map(faction => <option key={faction}>{faction}</option>)}
-    </select></label>
-</div><p className="intro-copy">{rosteredGames} parties avec liste pour ce camp. Une partie compte une fois par type d’unité, même avec plusieurs exemplaires. Victoires / défaites du camp choisi ; taux sur les parties décisives. Les listes sans partie sont exclues. Le score moyen est celui de l’armée, pas celui de l’unité.</p>
- <div className="roster-table-scroll"><table><thead><tr><th>Unité / faction</th><th>Parties</th><th>V / D / N</th><th>Victoires</th><th>Exemplaires / partie</th><th>Points / partie</th><th>Score armée moyen</th></tr></thead><tbody>{stats.map(row => <tr key={row.faction + row.name}><td>{row.name}<small>{row.faction}</small></td><td>{row.games}</td><td>{row.wins} / {row.losses} / {row.draws}</td><td>{row.winRate === null ? "—" : row.winRate + " %"}</td><td>{row.averageCopies.toFixed(1)}</td><td>{row.averagePoints.toFixed(0)}</td><td>{row.averageArmyScore === null ? "—" : row.averageArmyScore.toFixed(1)}</td></tr>)}</tbody></table></div>{stats.length === 0 && <p className="intro-copy">{against ? "Aucune unité pour cette confrontation." : "Associe une liste à une partie pour démarrer les statistiques."}</p>}<p className="intro-copy">Ces associations décrivent ton historique ; elles ne mesurent pas l’effet causal d’une unité sur la victoire. Éliminations, survie et points d’objectif individuels ne figurent pas dans le PDF.</p></section>
+ <section><h2>{gameId ? "Listes de cette partie" : "Bibliothèque de listes (100 plus récentes)"}</h2>{rosters.length === 0 && <p className="intro-copy">Aucune liste enregistrée ici.</p>}<div className="roster-unit-grid">{rosters.map(roster => <article className="roster-unit" key={roster.id}><p className="eyebrow">{roster.side === "my" ? "MON ARMÉE" : "ARMÉE ADVERSE"}</p><h3>{roster.name}</h3><p>{roster.faction} · {roster.detachment}</p><p>{roster.units.length} fiches · {roster.units.reduce((s, u) => s + u.points, 0)} points</p><details><summary>Voir les unités</summary><ul>{roster.units.map(u => <li key={u.position}>{u.name} × {u.models} — {u.points} pts {u.leader ? "(meneur)" : ""}</li>)}</ul></details><button disabled={busy} onClick={() => { setDraft({ ...roster, importKey: crypto.randomUUID(), warnings: [] }); setReviewed(false); setReplace(false); setMessage("Copie chargée dans l’aperçu. Choisis la partie et le camp avant de l’enregistrer."); }}>Réutiliser cette liste</button></article>)}</div></section>
+ <section><h2>Statistiques par unité</h2><label>Camp analysé<select value={statsSide} disabled={busy} onChange={e => setStatsSide(e.target.value)}><option value="my">Mes armées</option><option value="opponent">Armées adverses</option></select></label><p className="intro-copy">{rosteredGames} parties avec liste pour ce camp. Une partie compte une fois par type d’unité, même avec plusieurs exemplaires. Victoires / défaites du camp choisi ; taux sur les parties décisives. Les listes sans partie sont exclues. Le score moyen est celui de l’armée, pas celui de l’unité.</p>
+ <div className="roster-table-scroll"><table><thead><tr><th>Unité / faction</th><th>Parties</th><th>V / D / N</th><th>Victoires</th><th>Exemplaires / partie</th><th>Points / partie</th><th>Score armée moyen</th></tr></thead><tbody>{stats.map(row => <tr key={row.faction + row.name}><td>{row.name}<small>{row.faction}</small></td><td>{row.games}</td><td>{row.wins} / {row.losses} / {row.draws}</td><td>{row.winRate === null ? "—" : row.winRate + " %"}</td><td>{row.averageCopies.toFixed(1)}</td><td>{row.averagePoints.toFixed(0)}</td><td>{row.averageArmyScore === null ? "—" : row.averageArmyScore.toFixed(1)}</td></tr>)}</tbody></table></div>{stats.length === 0 && <p className="intro-copy">Associe une liste à une partie pour démarrer les statistiques.</p>}<p className="intro-copy">Ces associations décrivent ton historique ; elles ne mesurent pas l’effet causal d’une unité sur la victoire. Éliminations, survie et points d’objectif individuels ne figurent pas dans le PDF.</p></section>
  <Link className="media-detail-link" href={"/media" + (gameId ? "?gameId=" + gameId : "")}>Ajouter les photos et vidéos →</Link>
  </main>;
 }

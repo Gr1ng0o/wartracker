@@ -31,7 +31,7 @@ export function unitStatistics(rosters: Roster[]) {
         scoreGames: number;
     }>();
     for (const roster of rosters) {
-        if (!roster.game)
+        if (!roster.game || roster.game.result.startsWith("IN_PROGRESS"))
             continue;
         const grouped = new Map<string, {
             name: string;

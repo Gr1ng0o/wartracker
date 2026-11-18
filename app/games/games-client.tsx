@@ -33,7 +33,8 @@ export default function GamesClient({
   const total = filtered.length;
   const wins = filtered.filter((g) => g.result === "W").length;
   const losses = filtered.filter((g) => g.result === "L").length;
-  const winrate = total ? Math.round((wins / total) * 100) : 0;
+  const completed = filtered.filter(g => ["W", "L", "D"].includes(g.result || "")).length;
+  const winrate = completed ? Math.round((wins / completed) * 100) : 0;
 
   async function deleteGame(id: string) {
     const confirmed = confirm("Supprimer définitivement cette partie ?");
@@ -101,7 +102,7 @@ export default function GamesClient({
           const isWin = g.result === "W";
           const isLoss = g.result === "L";
 
-          const badgeText = isWin ? "Victoire" : isLoss ? "Défaite" : g.result;
+          const badgeText = isWin ? "Victoire" : isLoss ? "Défaite" : g.result?.startsWith("IN_PROGRESS") ? "En cours" : g.result;
           const badgeClass = isWin
             ? "bg-green-500/20 text-green-200 ring-1 ring-green-500/30"
             : isLoss

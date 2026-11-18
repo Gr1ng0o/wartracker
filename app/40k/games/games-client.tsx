@@ -20,7 +20,7 @@ function resultLabel(result?: string | null) {
   if (result === "W") return "Victoire";
   if (result === "L") return "Défaite";
   if (result === "D") return "Nul";
-  return result ?? "—";
+  return result?.startsWith("IN_PROGRESS") ? "En cours" : result ?? "—";
 }
 
 function formatDate(iso: string) {
