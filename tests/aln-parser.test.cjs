@@ -26,7 +26,7 @@ function gameRoute(prisma) {
     return { POST: service.saveGame, saveGame: service.saveGame };
 }
 function gameRequest(body) {
-    return new Request("https://wartracker.test/api/games", { method: "POST", body: JSON.stringify(body) });
+    return new Request("https://wartracker.test/api/games", { method: "POST", body: JSON.stringify({build:"Test",playedAt:"2026-11-22T00:00:00.000Z",myScore:0,oppScore:0,...body}) });
 }
 
 test("enregistrer une partie rattache une liste par camp dans la même écriture", async () => {
@@ -84,4 +84,31 @@ test("éditer une partie conserve les listes si aucun nouvel import et valide le
  const route=gameRoute({game:{update:async args=>{update=args;return {id:args.where.id};}}});
  const response=await route.saveGame(gameRequest({gameType:"40k",opponent:"Sam",status:"submitted",myScore:60,oppScore:80,myDetachment:"A · B",t1PhotoUrl:"https://drive.google.com/file/d/abc/view",t1Notes:"Tour modifié"}),"existing");
  assert.equal(response.status,200);assert.equal(update.where.id,"existing");assert.equal(update.data.result,"L");assert.equal(update.data.myDetachment,"A · B");assert.equal(update.data.t1Notes,"Tour modifié");assert.equal(update.data.rosters,undefined);
+});
+
+test("un brouillon totalement vide est sauvegardé pour les deux jeux",async()=>{
+ for(const gameType of ["40k","FaB"]){let data;const route=gameRoute({game:{create:async args=>{data=args.data;return{id:"empty"};}}});
+ const body={gameType,status:"in_progress",opponent:"",build:"",playedAt:"",myScore:"",oppScore:""};
+ const response=await route.POST(new Request("https://wartracker.test/api/games",{method:"POST",body:JSON.stringify(body)}));
+ assert.equal(response.status,201);assert.deepEqual(data.draftData.fields,body);assert.equal(data.opponent,"");assert.equal(data.rosters,undefined);
+ }
+});
+test("les valeurs invalides sont conservées dans le brouillon sans effacer les listes",async()=>{
+ let update;const route=gameRoute({game:{update:async args=>{update=args;return{id:"draft"};}}});
+ const body={gameType:"40k",status:"in_progress",playedAt:"pas une date",myScore:"abc",oppScore:-20,t1PhotoUrl:"lien erroné",myRoster:{draft:{}},myListText:sample};
+ const response=await route.saveGame(new Request("https://wartracker.test/api/games",{method:"PATCH",body:JSON.stringify(body)}),"draft");
+ assert.equal(response.status,200);assert.deepEqual(update.data.draftData.fields,body);assert.equal(update.data.rosters,undefined);assert.equal(update.data.myScore,undefined);assert.equal(update.data.playedAt,undefined);assert.equal(update.data.t1PhotoUrl,undefined);
+});
+test("les mêmes erreurs empêchent la validation sans aucune écriture",async()=>{
+ let writes=0;const route=gameRoute({game:{create:async()=>{writes++;}}});
+ for(const fields of [{opponent:""},{playedAt:""},{build:""},{myScore:""},{myScore:"abc"},{oppScore:-1},{t1PhotoUrl:"lien erroné"}]){
+ const response=await route.POST(gameRequest({gameType:"40k",opponent:"Alex",status:"submitted",...fields}));assert.equal(response.status,400);
+ }assert.equal(writes,0);
+});
+test("un PDF en attente bloque uniquement la validation finale",async()=>{
+ let writes=0;const route=gameRoute({game:{create:async()=>{writes++;return{id:"draft"};}}});
+ const response=await route.POST(gameRequest({gameType:"40k",opponent:"Alex",status:"submitted",pendingImports:{my:"PDF illisible"}}));assert.equal(response.status,422);assert.equal(writes,0);
+});
+test("une validation corrigée efface le stockage de brouillon",async()=>{
+ let update;const route=gameRoute({game:{update:async args=>{update=args;return{id:"draft"};}}});const response=await route.saveGame(gameRequest({gameType:"40k",opponent:"Alex",status:"submitted",playedAt:"2026-11-22",myScore:"80",oppScore:"60"}),"draft");assert.equal(response.status,200);assert.equal(update.data.result,"W");assert.equal(update.data.draftData,require('@prisma/client').Prisma.DbNull);assert.equal(update.data.playedAt.toISOString(),"2026-11-22T00:00:00.000Z");
 });

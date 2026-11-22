@@ -9,6 +9,7 @@ datasource db {
 }
 
 model Game {
+  draftData          Json?
   playedAt           DateTime?
   points             Int?
   missionPack        String?
