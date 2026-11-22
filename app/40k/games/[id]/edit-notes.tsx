@@ -47,7 +47,7 @@ export default function EditNotes({
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         placeholder="Notes post-game, axes d’amélioration, erreurs, idées…"
-        className="min-h-[140px] w-full resize-y rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-sm text-white/90 outline-none placeholder:text-white/30 focus:border-amber-200/30 focus:ring-1 focus:ring-amber-200/15"
+        className="min-h-[140px] w-full resize-y rounded-xl border border-stone-700 bg-black/50 px-3 py-2 text-sm text-stone-100 outline-none placeholder:text-stone-100/30 focus:border-amber-200/30 focus:ring-1 focus:ring-amber-200/15"
       />
 
       <div className="flex items-center justify-between gap-3">
@@ -55,13 +55,13 @@ export default function EditNotes({
           type="button"
           onClick={save}
           disabled={saving}
-          className="rounded-xl border border-white/10 bg-black/60 px-4 py-2 text-sm font-semibold text-white/85 transition hover:bg-black/75 disabled:opacity-50"
+          className="rounded-xl border border-stone-700 bg-black/60 px-4 py-2 text-sm font-semibold text-stone-100 transition hover:bg-black/75 disabled:opacity-50"
         >
           {saving ? "Sauvegarde…" : "Sauvegarder"}
         </button>
 
-        <div className="text-xs text-white/45">
-          {msg ? <span className="text-white/75">{msg}</span> : null}
+        <div className="text-xs text-stone-400">
+          {msg ? <span className="text-stone-100/75">{msg}</span> : null}
         </div>
       </div>
     </div>
