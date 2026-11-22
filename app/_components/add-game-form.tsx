@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import heroes from "@/lib/fab-heroes.json";
 import DrivePhoto, { DriveLinkField } from "./drive-photo";
 import ArmySelection from "./army-selection";
+import MissionSelection from "./mission-selection";
 
 const turns = ["deployment", "t1", "t2", "t3", "t4", "t5"];
 const sides = [
@@ -121,12 +122,7 @@ export default function AddGameForm({ gameType, savedRosters = [], initialGame }
                         </details>
                     </fieldset>)}
                 </div>
-                <fieldset disabled={saving}>
-                    <legend>Mission et terrain</legend>
-                    <div className="new-game-grid">
-                        {[["missionPack", "Pack de missions"], ["primaryMission", "Mission principale"], ["deployment", "Déploiement"], ["terrainLayout", "Terrain"]].map(([name, label]) => <label key={name}>{label}<input defaultValue={initialGame?.[name] || ""} name={name} maxLength={200} /></label>)}
-                    </div>
-                </fieldset>
+                <MissionSelection initial={initialGame} disabled={saving} />
                 <details>
                     <summary>Notes par tour</summary>
                     <div className="new-game-grid">
